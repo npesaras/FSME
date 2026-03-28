@@ -51,13 +51,22 @@ async function sendAuthRequest<TResponse>(
   path: string,
   payload: SignInPayload | SignUpPayload
 ): Promise<TResponse> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch (error) {
+    throw new AuthApiError(
+      `Cannot reach the auth server at ${getApiBaseUrl()}. Make sure the Fastify backend is running and VITE_API_BASE_URL is correct.`,
+      0
+    )
+  }
 
   if (!response.ok) {
     const errorPayload = (await response.json().catch(() => null)) as ApiErrorPayload | null

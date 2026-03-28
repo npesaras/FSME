@@ -32,7 +32,7 @@ export default function AuthSplitLayout({
             <h1 className="text-[28px] font-bold tracking-tight text-slate-900">
               {title}
             </h1>
-            <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            <p className="mt-2 text-sm font-medium text-slate-600">{subtitle}</p>
           </div>
 
           {children}

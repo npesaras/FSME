@@ -45,7 +45,7 @@ export default function LoginPage() {
     >
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
+        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
       >
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -72,7 +72,7 @@ export default function LoginPage() {
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-4 text-xs font-medium uppercase text-slate-400">
+          <span className="bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             OR
           </span>
         </div>
@@ -88,7 +88,7 @@ export default function LoginPage() {
         className="space-y-5"
       >
         {submitError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {submitError}
           </div>
         ) : null}
@@ -116,7 +116,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-sm font-semibold text-slate-800"
+                  className="text-sm font-semibold text-slate-900"
                 >
                   Email Address
                 </label>
@@ -129,15 +129,15 @@ export default function LoginPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Enter your email"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Mail className="h-4 w-4 text-slate-400" />
+                    <Mail className="h-4 w-4 text-slate-500" />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-sm text-red-500">{String(error)}</p>
+                  <p className="text-sm font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -167,7 +167,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-sm font-semibold text-slate-800"
+                  className="text-sm font-semibold text-slate-900"
                 >
                   Password
                 </label>
@@ -180,13 +180,13 @@ export default function LoginPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
                   >
                     {showPassword ? (
                       <Eye className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-sm text-red-500">{String(error)}</p>
+                  <p className="text-sm font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -218,7 +218,7 @@ export default function LoginPage() {
                 />
                 <label
                   htmlFor={field.name}
-                  className="cursor-pointer select-none text-sm text-slate-600"
+                  className="cursor-pointer select-none text-sm font-medium text-slate-700"
                 >
                   Remember Me
                 </label>
@@ -228,7 +228,7 @@ export default function LoginPage() {
 
           <button
             type="button"
-            className="text-sm font-medium text-red-500 hover:text-red-600 hover:underline"
+            className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
           >
             Forgot Password?
           </button>
@@ -250,10 +250,10 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-8 text-center text-sm">
-        <span className="text-slate-500">Don&apos;t have an account? </span>
+        <span className="text-slate-600">Don&apos;t have an account? </span>
         <Link
           to="/signup"
-          className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+          className="font-semibold text-[#156a63] hover:text-[#0f544e] hover:underline"
         >
           Create Account
         </Link>

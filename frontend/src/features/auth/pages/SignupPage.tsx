@@ -49,7 +49,7 @@ export default function SignupPage() {
     >
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
+        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
       >
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -76,7 +76,7 @@ export default function SignupPage() {
           <div className="w-full border-t border-slate-200" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-4 text-xs font-medium uppercase text-slate-400">
+          <span className="bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             OR
           </span>
         </div>
@@ -92,7 +92,7 @@ export default function SignupPage() {
         className="space-y-4"
       >
         {submitError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {submitError}
           </div>
         ) : null}
@@ -120,7 +120,7 @@ export default function SignupPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-800"
+                  className="text-[13px] font-semibold text-slate-900"
                 >
                   Name
                 </label>
@@ -133,15 +133,15 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Enter your name"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <User className="h-[15px] w-[15px] text-slate-400" />
+                    <User className="h-[15px] w-[15px] text-slate-500" />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -171,7 +171,7 @@ export default function SignupPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-800"
+                  className="text-[13px] font-semibold text-slate-900"
                 >
                   Email Address
                 </label>
@@ -184,15 +184,15 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Enter your email"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Mail className="h-[15px] w-[15px] text-slate-400" />
+                    <Mail className="h-[15px] w-[15px] text-slate-500" />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -222,7 +222,7 @@ export default function SignupPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-800"
+                  className="text-[13px] font-semibold text-slate-900"
                 >
                   Password
                 </label>
@@ -235,13 +235,13 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
                   >
                     {showPassword ? (
                       <Eye className="h-[15px] w-[15px]" />
@@ -251,7 +251,7 @@ export default function SignupPage() {
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -282,7 +282,7 @@ export default function SignupPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-800"
+                  className="text-[13px] font-semibold text-slate-900"
                 >
                   Confirm Password
                 </label>
@@ -295,13 +295,13 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
                   >
                     {showConfirmPassword ? (
                       <Eye className="h-[15px] w-[15px]" />
@@ -311,7 +311,7 @@ export default function SignupPage() {
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -347,16 +347,16 @@ export default function SignupPage() {
                   />
                   <label
                     htmlFor={field.name}
-                    className="cursor-pointer select-none text-[13px] text-slate-600"
+                    className="cursor-pointer select-none text-[13px] font-medium text-slate-700"
                   >
                     I Agree to{' '}
-                    <span className="cursor-pointer font-medium text-[#2563EB] hover:underline">
+                    <span className="cursor-pointer font-semibold text-[#156a63] hover:underline">
                       Terms &amp; Privacy
                     </span>
                   </label>
                 </div>
                 {error ? (
-                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -379,10 +379,10 @@ export default function SignupPage() {
       </form>
 
       <div className="mt-6 text-center text-[13px]">
-        <span className="text-slate-500">Already have an account? </span>
+        <span className="text-slate-600">Already have an account? </span>
         <Link
           to="/sign-in"
-          className="font-semibold text-[#2563EB] hover:text-blue-700 hover:underline"
+          className="font-semibold text-[#156a63] hover:text-[#0f544e] hover:underline"
         >
           Sign In
         </Link>

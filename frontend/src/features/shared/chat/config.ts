@@ -10,7 +10,21 @@ export type CometChatRoleConfig = {
 }
 
 function readEnv(value: string | undefined) {
-  return value?.trim() ?? ''
+  const normalizedValue = value?.trim() ?? ''
+
+  if (!normalizedValue) {
+    return ''
+  }
+
+  if (
+    normalizedValue.startsWith('YOUR_') ||
+    normalizedValue.startsWith('REPLACE_') ||
+    normalizedValue === 'UID'
+  ) {
+    return ''
+  }
+
+  return normalizedValue
 }
 
 export function getCometChatRoleConfig(actor: ChatActor): CometChatRoleConfig {

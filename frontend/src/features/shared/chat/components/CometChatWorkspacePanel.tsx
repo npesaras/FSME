@@ -19,6 +19,20 @@ function formatError(error: unknown) {
     return error
   }
 
+  if (error && typeof error === 'object') {
+    const candidate = error as Record<string, unknown>
+    const detail = [
+      typeof candidate.message === 'string' ? candidate.message : null,
+      typeof candidate.code === 'string' ? `code: ${candidate.code}` : null,
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
+    if (detail) {
+      return detail
+    }
+  }
+
   return 'CometChat could not be initialized for this workspace.'
 }
 
@@ -73,6 +87,13 @@ export default function CometChatWorkspacePanel({
         }
       })
       .catch((error) => {
+        console.error('CometChat workspace startup failed', {
+          actor: config.actor,
+          region: config.region,
+          uid: config.uid,
+          error,
+        })
+
         if (!cancelled) {
           setChatState({
             status: 'error',
@@ -99,7 +120,7 @@ export default function CometChatWorkspacePanel({
     return (
       <ChatStatusPanel
         title="CometChat needs configuration"
-        description="Add the missing Vite environment variables below in the repository root `.env` file, then restart the frontend dev server."
+        description="Add the missing Vite environment variables below in `frontend/.env`, then restart the frontend dev server."
       >
         <div className="mt-5 rounded-2xl border border-dashed border-[var(--line)] bg-white/70 p-4">
           <p className="m-0 text-xs font-semibold tracking-[0.18em] text-[var(--sea-ink-soft)] uppercase">
@@ -129,6 +150,11 @@ export default function CometChatWorkspacePanel({
         <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm leading-7 text-red-700">
           {chatState.message}
         </div>
+        <p className="mt-4 text-xs leading-6 text-[var(--sea-ink-soft)]">
+          Check the browser console for the raw CometChat error object. The most common causes are
+          a missing role UID, a UID that does not exist in your CometChat app, or an app ID /
+          region / auth key mismatch.
+        </p>
       </ChatStatusPanel>
     )
   }

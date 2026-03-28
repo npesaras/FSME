@@ -1,4 +1,4 @@
-const { Client, Health, Storage, TablesDB } = require('node-appwrite')
+const { Client, Health, TablesDB } = require('node-appwrite')
 const { config } = require('./config')
 
 const client = new Client()
@@ -9,35 +9,27 @@ const client = new Client()
 const appwrite = {
   client,
   health: new Health(client),
-  storage: new Storage(client),
   tablesDB: new TablesDB(client),
 }
 
 async function getAppwriteStatus() {
-  const [serviceHealth, databaseHealth, tables, buckets] = await Promise.all([
+  const [serviceHealth, databaseHealth, tables] = await Promise.all([
     appwrite.health.get(),
     appwrite.health.getDB(),
-    appwrite.tablesDB.listTables({ databaseId: config.appwrite.databaseId }),
-    appwrite.storage.listBuckets(),
+    appwrite.tablesDB.listTables({
+      databaseId: config.appwrite.databaseId,
+    }),
   ])
-
-  const configuredBucket = config.appwrite.bucketId
-    ? buckets.buckets.find((bucket) => bucket.$id === config.appwrite.bucketId) || null
-    : null
 
   return {
     status: 'ok',
     endpoint: config.appwrite.endpoint,
     projectId: config.appwrite.projectId,
     databaseId: config.appwrite.databaseId,
+    accountsTableId: config.appwrite.accountsTableId,
     tables: {
       total: tables.total,
       ids: tables.tables.map((table) => table.$id),
-    },
-    bucket: {
-      configuredId: config.appwrite.bucketId || null,
-      exists: Boolean(configuredBucket),
-      availableIds: buckets.buckets.map((bucket) => bucket.$id),
     },
     services: {
       appwrite: {

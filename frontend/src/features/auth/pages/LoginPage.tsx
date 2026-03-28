@@ -3,20 +3,38 @@ import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
+import { AuthApiError, saveAuthSession, signIn } from '../api'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const form = useForm({
     defaultValues: {
       email: '',
       password: '',
       remember: false,
     },
-    onSubmit: async () => {
-      navigate({ to: '/home' })
+    onSubmit: async ({ value }) => {
+      try {
+        setSubmitError(null)
+
+        const session = await signIn({
+          email: value.email,
+          password: value.password,
+        })
+
+        saveAuthSession(session)
+        navigate({ to: '/home' })
+      } catch (error) {
+        setSubmitError(
+          error instanceof AuthApiError
+            ? error.message
+            : 'Unable to sign in right now. Please try again.'
+        )
+      }
     },
   })
 
@@ -69,6 +87,12 @@ export default function LoginPage() {
         }}
         className="space-y-5"
       >
+        {submitError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {submitError}
+          </div>
+        ) : null}
+
         <form.Field
           name="email"
           validators={{

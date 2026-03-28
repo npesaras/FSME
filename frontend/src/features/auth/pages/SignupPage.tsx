@@ -3,6 +3,7 @@ import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail, User } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
+import { AuthApiError, saveAuthSession, signUp } from '../api'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -10,6 +11,7 @@ export default function SignupPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const form = useForm({
     defaultValues: {
       name: '',
@@ -18,8 +20,25 @@ export default function SignupPage() {
       confirmPassword: '',
       terms: false,
     },
-    onSubmit: async () => {
-      navigate({ to: '/home' })
+    onSubmit: async ({ value }) => {
+      try {
+        setSubmitError(null)
+
+        const session = await signUp({
+          name: value.name,
+          email: value.email,
+          password: value.password,
+        })
+
+        saveAuthSession(session)
+        navigate({ to: '/home' })
+      } catch (error) {
+        setSubmitError(
+          error instanceof AuthApiError
+            ? error.message
+            : 'Unable to create your account right now. Please try again.'
+        )
+      }
     },
   })
 
@@ -72,6 +91,12 @@ export default function SignupPage() {
         }}
         className="space-y-4"
       >
+        {submitError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {submitError}
+          </div>
+        ) : null}
+
         <form.Field
           name="name"
           validators={{

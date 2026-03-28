@@ -69,7 +69,7 @@
     }
   },
   "layout": {
-    "withSideBar": false,
+    "withSideBar": true,
     "tabs": [
       "chats",
       "calls",

@@ -12,6 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@cometchat/calls-sdk-javascript": "^4.2.5",
+    "@cometchat/chat-uikit-react": "^6.3.11",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-form": "^1.28.5",

@@ -14,7 +14,9 @@ import { Route as FacultyIndexRouteImport } from './routes/faculty/index'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as PanelistReviewsRouteImport } from './routes/panelist/reviews'
 import { Route as PanelistDecisionsRouteImport } from './routes/panelist/decisions'
+import { Route as PanelistChatRouteImport } from './routes/panelist/chat'
 import { Route as FacultyDocumentsRouteImport } from './routes/faculty/documents'
+import { Route as FacultyChatRouteImport } from './routes/faculty/chat'
 import { Route as FacultyApplicationsRouteImport } from './routes/faculty/applications'
 import { Route as publicSignupRouteImport } from './routes/(public)/signup'
 import { Route as publicSignInRouteImport } from './routes/(public)/sign-in'
@@ -46,9 +48,19 @@ const PanelistDecisionsRoute = PanelistDecisionsRouteImport.update({
   path: '/panelist/decisions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PanelistChatRoute = PanelistChatRouteImport.update({
+  id: '/panelist/chat',
+  path: '/panelist/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FacultyDocumentsRoute = FacultyDocumentsRouteImport.update({
   id: '/faculty/documents',
   path: '/faculty/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FacultyChatRoute = FacultyChatRouteImport.update({
+  id: '/faculty/chat',
+  path: '/faculty/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FacultyApplicationsRoute = FacultyApplicationsRouteImport.update({
@@ -83,7 +95,9 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof publicSignInRoute
   '/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
+  '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/reviews': typeof PanelistReviewsRoute
   '/': typeof publicIndexRoute
@@ -96,7 +110,9 @@ export interface FileRoutesByTo {
   '/sign-in': typeof publicSignInRoute
   '/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
+  '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/reviews': typeof PanelistReviewsRoute
   '/': typeof publicIndexRoute
@@ -110,7 +126,9 @@ export interface FileRoutesById {
   '/(public)/sign-in': typeof publicSignInRoute
   '/(public)/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
+  '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/reviews': typeof PanelistReviewsRoute
   '/(public)/': typeof publicIndexRoute
@@ -125,7 +143,9 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/signup'
     | '/faculty/applications'
+    | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/chat'
     | '/panelist/decisions'
     | '/panelist/reviews'
     | '/'
@@ -138,7 +158,9 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/signup'
     | '/faculty/applications'
+    | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/chat'
     | '/panelist/decisions'
     | '/panelist/reviews'
     | '/'
@@ -151,7 +173,9 @@ export interface FileRouteTypes {
     | '/(public)/sign-in'
     | '/(public)/signup'
     | '/faculty/applications'
+    | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/chat'
     | '/panelist/decisions'
     | '/panelist/reviews'
     | '/(public)/'
@@ -165,7 +189,9 @@ export interface RootRouteChildren {
   publicSignInRoute: typeof publicSignInRoute
   publicSignupRoute: typeof publicSignupRoute
   FacultyApplicationsRoute: typeof FacultyApplicationsRoute
+  FacultyChatRoute: typeof FacultyChatRoute
   FacultyDocumentsRoute: typeof FacultyDocumentsRoute
+  PanelistChatRoute: typeof PanelistChatRoute
   PanelistDecisionsRoute: typeof PanelistDecisionsRoute
   PanelistReviewsRoute: typeof PanelistReviewsRoute
   publicIndexRoute: typeof publicIndexRoute
@@ -210,11 +236,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelistDecisionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/panelist/chat': {
+      id: '/panelist/chat'
+      path: '/panelist/chat'
+      fullPath: '/panelist/chat'
+      preLoaderRoute: typeof PanelistChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faculty/documents': {
       id: '/faculty/documents'
       path: '/faculty/documents'
       fullPath: '/faculty/documents'
       preLoaderRoute: typeof FacultyDocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faculty/chat': {
+      id: '/faculty/chat'
+      path: '/faculty/chat'
+      fullPath: '/faculty/chat'
+      preLoaderRoute: typeof FacultyChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faculty/applications': {
@@ -261,7 +301,9 @@ const rootRouteChildren: RootRouteChildren = {
   publicSignInRoute: publicSignInRoute,
   publicSignupRoute: publicSignupRoute,
   FacultyApplicationsRoute: FacultyApplicationsRoute,
+  FacultyChatRoute: FacultyChatRoute,
   FacultyDocumentsRoute: FacultyDocumentsRoute,
+  PanelistChatRoute: PanelistChatRoute,
   PanelistDecisionsRoute: PanelistDecisionsRoute,
   PanelistReviewsRoute: PanelistReviewsRoute,
   publicIndexRoute: publicIndexRoute,

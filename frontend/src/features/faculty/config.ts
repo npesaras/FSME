@@ -15,4 +15,11 @@ export const facultyScopeLinks: ScopeLink[] = [
       'Upload required files, replace outdated attachments, and track completion before submission.',
     to: '/faculty/documents',
   },
+  {
+    label: 'Shared feature',
+    title: 'Chat workspace',
+    description:
+      'Coordinate with support, reviewers, or workflow stakeholders from the shared CometChat workspace.',
+    to: '/faculty/chat',
+  },
 ]

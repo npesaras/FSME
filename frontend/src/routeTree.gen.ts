@@ -16,6 +16,9 @@ import { Route as PanelistReviewsRouteImport } from './routes/panelist/reviews'
 import { Route as PanelistDecisionsRouteImport } from './routes/panelist/decisions'
 import { Route as FacultyDocumentsRouteImport } from './routes/faculty/documents'
 import { Route as FacultyApplicationsRouteImport } from './routes/faculty/applications'
+import { Route as publicSignupRouteImport } from './routes/(public)/signup'
+import { Route as publicSignInRouteImport } from './routes/(public)/sign-in'
+import { Route as publicHomeRouteImport } from './routes/(public)/home'
 import { Route as publicAboutRouteImport } from './routes/(public)/about'
 
 const PanelistIndexRoute = PanelistIndexRouteImport.update({
@@ -53,6 +56,21 @@ const FacultyApplicationsRoute = FacultyApplicationsRouteImport.update({
   path: '/faculty/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const publicSignupRoute = publicSignupRouteImport.update({
+  id: '/(public)/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const publicSignInRoute = publicSignInRouteImport.update({
+  id: '/(public)/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const publicHomeRoute = publicHomeRouteImport.update({
+  id: '/(public)/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const publicAboutRoute = publicAboutRouteImport.update({
   id: '/(public)/about',
   path: '/about',
@@ -61,6 +79,9 @@ const publicAboutRoute = publicAboutRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/about': typeof publicAboutRoute
+  '/home': typeof publicHomeRoute
+  '/sign-in': typeof publicSignInRoute
+  '/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
@@ -71,6 +92,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/about': typeof publicAboutRoute
+  '/home': typeof publicHomeRoute
+  '/sign-in': typeof publicSignInRoute
+  '/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
@@ -82,6 +106,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(public)/about': typeof publicAboutRoute
+  '/(public)/home': typeof publicHomeRoute
+  '/(public)/sign-in': typeof publicSignInRoute
+  '/(public)/signup': typeof publicSignupRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
@@ -94,6 +121,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/about'
+    | '/home'
+    | '/sign-in'
+    | '/signup'
     | '/faculty/applications'
     | '/faculty/documents'
     | '/panelist/decisions'
@@ -104,6 +134,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/about'
+    | '/home'
+    | '/sign-in'
+    | '/signup'
     | '/faculty/applications'
     | '/faculty/documents'
     | '/panelist/decisions'
@@ -114,6 +147,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(public)/about'
+    | '/(public)/home'
+    | '/(public)/sign-in'
+    | '/(public)/signup'
     | '/faculty/applications'
     | '/faculty/documents'
     | '/panelist/decisions'
@@ -125,6 +161,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   publicAboutRoute: typeof publicAboutRoute
+  publicHomeRoute: typeof publicHomeRoute
+  publicSignInRoute: typeof publicSignInRoute
+  publicSignupRoute: typeof publicSignupRoute
   FacultyApplicationsRoute: typeof FacultyApplicationsRoute
   FacultyDocumentsRoute: typeof FacultyDocumentsRoute
   PanelistDecisionsRoute: typeof PanelistDecisionsRoute
@@ -185,6 +224,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacultyApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(public)/signup': {
+      id: '/(public)/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof publicSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/sign-in': {
+      id: '/(public)/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof publicSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(public)/home': {
+      id: '/(public)/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof publicHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(public)/about': {
       id: '/(public)/about'
       path: '/about'
@@ -197,6 +257,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   publicAboutRoute: publicAboutRoute,
+  publicHomeRoute: publicHomeRoute,
+  publicSignInRoute: publicSignInRoute,
+  publicSignupRoute: publicSignupRoute,
   FacultyApplicationsRoute: FacultyApplicationsRoute,
   FacultyDocumentsRoute: FacultyDocumentsRoute,
   PanelistDecisionsRoute: PanelistDecisionsRoute,

@@ -1,17 +1,27 @@
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail, User } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function SignupPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  function handleSignup(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    navigate({ to: '/home' })
-  }
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      terms: false,
+    },
+    onSubmit: async () => {
+      navigate({ to: '/home' })
+    },
+  })
 
   return (
     <AuthSplitLayout
@@ -53,105 +63,294 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-800">Name</label>
-          <div className="relative">
-            <input
-              type="text"
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-            />
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <User className="h-[15px] w-[15px] text-slate-400" />
-            </div>
-          </div>
-        </div>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          void form.handleSubmit()
+        }}
+        className="space-y-4"
+      >
+        <form.Field
+          name="name"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'Name is required'
+              }
 
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-800">Email Address</label>
-          <div className="relative">
-            <input
-              type="email"
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-            />
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <Mail className="h-[15px] w-[15px] text-slate-400" />
-            </div>
-          </div>
-        </div>
+              if (value.trim().length < 2) {
+                return 'Enter your full name'
+              }
 
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-800">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
-            >
-              {showPassword ? (
-                <Eye className="h-[15px] w-[15px]" />
-              ) : (
-                <EyeOff className="h-[15px] w-[15px]" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-semibold text-slate-800">
-            Confirm Password
-          </label>
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword((current) => !current)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
-            >
-              {showConfirmPassword ? (
-                <Eye className="h-[15px] w-[15px]" />
-              ) : (
-                <EyeOff className="h-[15px] w-[15px]" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pb-1 pt-1">
-          <input
-            type="checkbox"
-            id="terms"
-            required
-            className="h-3.5 w-3.5 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
-          />
-          <label
-            htmlFor="terms"
-            className="cursor-pointer select-none text-[13px] text-slate-600"
-          >
-            I Agree to{' '}
-            <span className="cursor-pointer font-medium text-[#2563EB] hover:underline">
-              Terms &amp; Privacy
-            </span>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          className="mt-2 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2"
+              return undefined
+            },
+          }}
         >
-          Sign Up
-        </button>
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-[13px] font-semibold text-slate-800"
+                >
+                  Name
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type="text"
+                    autoComplete="name"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Enter your name"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <User className="h-[15px] w-[15px] text-slate-400" />
+                  </div>
+                </div>
+                {error ? (
+                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Field
+          name="email"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'Email is required'
+              }
+
+              if (!emailPattern.test(value)) {
+                return 'Enter a valid email address'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-[13px] font-semibold text-slate-800"
+                >
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type="email"
+                    autoComplete="email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Enter your email"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <Mail className="h-[15px] w-[15px] text-slate-400" />
+                  </div>
+                </div>
+                {error ? (
+                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Field
+          name="password"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'Password is required'
+              }
+
+              if (value.length < 8) {
+                return 'Password must be at least 8 characters'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-[13px] font-semibold text-slate-800"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-[15px] w-[15px]" />
+                    ) : (
+                      <EyeOff className="h-[15px] w-[15px]" />
+                    )}
+                  </button>
+                </div>
+                {error ? (
+                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Field
+          name="confirmPassword"
+          validators={{
+            onChangeListenTo: ['password'],
+            onChange: ({ value, fieldApi }) => {
+              if (!value) {
+                return 'Confirm your password'
+              }
+
+              if (value !== fieldApi.form.getFieldValue('password')) {
+                return 'Passwords do not match'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-[13px] font-semibold text-slate-800"
+                >
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showConfirmPassword ? (
+                      <Eye className="h-[15px] w-[15px]" />
+                    ) : (
+                      <EyeOff className="h-[15px] w-[15px]" />
+                    )}
+                  </button>
+                </div>
+                {error ? (
+                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Field
+          name="terms"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'You must agree to Terms & Privacy'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5 pb-1 pt-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type="checkbox"
+                    checked={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
+                  />
+                  <label
+                    htmlFor={field.name}
+                    className="cursor-pointer select-none text-[13px] text-slate-600"
+                  >
+                    I Agree to{' '}
+                    <span className="cursor-pointer font-medium text-[#2563EB] hover:underline">
+                      Terms &amp; Privacy
+                    </span>
+                  </label>
+                </div>
+                {error ? (
+                  <p className="text-[13px] text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <button
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              className="mt-2 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? 'Signing Up...' : 'Sign Up'}
+            </button>
+          )}
+        </form.Subscribe>
       </form>
 
       <div className="mt-6 text-center text-[13px]">

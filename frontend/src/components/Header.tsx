@@ -1,7 +1,12 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+  const isAuthRoute = pathname === '/sign-in' || pathname === '/signup'
+
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
       <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
@@ -16,6 +21,14 @@ export default function Header() {
         </h2>
 
         <div className="ml-auto flex items-center gap-2">
+          {isAuthRoute ? null : (
+            <Link
+              to="/sign-in"
+              className="hidden rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm font-semibold text-[var(--sea-ink-soft)] no-underline shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5 hover:text-[var(--sea-ink)] sm:inline-flex"
+            >
+              Sign In
+            </Link>
+          )}
           <a
             href="https://tanstack.com/start/latest/docs/framework/react/overview"
             target="_blank"

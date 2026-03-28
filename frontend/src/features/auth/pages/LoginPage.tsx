@@ -1,16 +1,24 @@
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
-
-  function handleLogin(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    navigate({ to: '/home' })
-  }
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+      remember: false,
+    },
+    onSubmit: async () => {
+      navigate({ to: '/home' })
+    },
+  })
 
   return (
     <AuthSplitLayout
@@ -52,59 +60,148 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-5">
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-800">Email Address</label>
-          <div className="relative">
-            <input
-              type="email"
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-              placeholder="Enter your email"
-            />
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <Mail className="h-4 w-4 text-slate-400" />
-            </div>
-          </div>
-        </div>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          void form.handleSubmit()
+        }}
+        className="space-y-5"
+      >
+        <form.Field
+          name="email"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'Email is required'
+              }
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-slate-800">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              required
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
-              placeholder="Enter your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
-            >
-              {showPassword ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-        </div>
+              if (!emailPattern.test(value)) {
+                return 'Enter a valid email address'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type="email"
+                    autoComplete="email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Enter your email"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+                {error ? (
+                  <p className="text-sm text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
+
+        <form.Field
+          name="password"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) {
+                return 'Password is required'
+              }
+
+              if (value.length < 8) {
+                return 'Password must be at least 8 characters'
+              }
+
+              return undefined
+            },
+          }}
+        >
+          {(field) => {
+            const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+
+            return (
+              <div className="space-y-1.5">
+                <label
+                  htmlFor={field.name}
+                  className="text-sm font-semibold text-slate-800"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder:text-slate-400 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                {error ? (
+                  <p className="text-sm text-red-500">{String(error)}</p>
+                ) : null}
+              </div>
+            )
+          }}
+        </form.Field>
 
         <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="remember"
-              className="h-4 w-4 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
-            />
-            <label
-              htmlFor="remember"
-              className="cursor-pointer select-none text-sm text-slate-600"
-            >
-              Remember Me
-            </label>
-          </div>
+          <form.Field name="remember">
+            {(field) => (
+              <div className="flex items-center gap-2">
+                <input
+                  id={field.name}
+                  name={field.name}
+                  type="checkbox"
+                  checked={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
+                />
+                <label
+                  htmlFor={field.name}
+                  className="cursor-pointer select-none text-sm text-slate-600"
+                >
+                  Remember Me
+                </label>
+              </div>
+            )}
+          </form.Field>
+
           <button
             type="button"
             className="text-sm font-medium text-red-500 hover:text-red-600 hover:underline"
@@ -113,12 +210,19 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <button
-          type="submit"
-          className="mt-4 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2"
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
-          Sign In
-        </button>
+          {([canSubmit, isSubmitting]) => (
+            <button
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              className="mt-4 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
+            </button>
+          )}
+        </form.Subscribe>
       </form>
 
       <div className="mt-8 text-center text-sm">

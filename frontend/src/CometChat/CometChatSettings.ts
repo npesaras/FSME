@@ -72,9 +72,7 @@
     "withSideBar": true,
     "tabs": [
       "chats",
-      "calls",
-      "users",
-      "groups"
+      "users"
     ],
     "chatType": "user"
   },

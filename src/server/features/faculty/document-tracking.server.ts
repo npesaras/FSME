@@ -9,51 +9,6 @@ import type {
 
 type AppwriteRow = Models.Row & Record<string, unknown>
 
-const demoDocumentTrackingRecords: DocumentTrackingRecord[] = [
-  {
-    id: 'demo-1',
-    date: 'Oct 24, 2023 10:30 AM',
-    status: 'Pending',
-    fileName: 'Q3_Financial_Report.pdf',
-    remarks: 'Awaiting department head signature',
-  },
-  {
-    id: 'demo-2',
-    date: 'Oct 23, 2023 04:15 PM',
-    status: 'Accepted',
-    fileName: 'Student_Enrollment_List_2023.xlsx',
-    remarks: 'Approved by Registrar',
-  },
-  {
-    id: 'demo-3',
-    date: 'Oct 22, 2023 09:00 AM',
-    status: 'Pending',
-    fileName: 'Teacher_Syllabus_Math101.docx',
-    remarks: 'Under review by Curriculum Dept',
-  },
-  {
-    id: 'demo-4',
-    date: 'Oct 21, 2023 02:45 PM',
-    status: 'Accepted',
-    fileName: 'Facility_Maintenance_Request.pdf',
-    remarks: 'Scheduled for next week',
-  },
-  {
-    id: 'demo-5',
-    date: 'Oct 20, 2023 11:20 AM',
-    status: 'Rejected',
-    fileName: 'Field_Trip_Proposal.pdf',
-    remarks: 'Missing budget breakdown',
-  },
-  {
-    id: 'demo-6',
-    date: 'Oct 19, 2023 03:50 PM',
-    status: 'Accepted',
-    fileName: 'Annual_Budget_Review.xlsx',
-    remarks: 'Approved by Finance',
-  },
-]
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -152,35 +107,18 @@ function normalizeDocumentTrackingRow(row: AppwriteRow): DocumentTrackingRecord 
   }
 }
 
-function isMissingDocumentTableError(error: unknown) {
-  return (
-    error instanceof Error &&
-    error.message.includes(
-      `Table with the requested ID '${config.appwrite.documentTrackingTableId}' could not be found`,
-    )
-  )
-}
-
 export async function listDocumentTrackingRecordsForFaculty(accountId: string) {
-  try {
-    const result = await appwrite.tablesDB.listRows({
-      databaseId: config.appwrite.databaseId,
-      tableId: config.appwrite.documentTrackingTableId,
-      queries: [
-        Query.equal('applicant_id', [accountId]),
-        Query.orderDesc('uploaded_at'),
-        Query.limit(20),
-      ],
-    })
+  const result = await appwrite.tablesDB.listRows({
+    databaseId: config.appwrite.databaseId,
+    tableId: config.appwrite.documentTrackingTableId,
+    queries: [
+      Query.equal('applicant_id', [accountId]),
+      Query.orderDesc('uploaded_at'),
+      Query.limit(20),
+    ],
+  })
 
-    return result.rows
-      .filter(isRecord)
-      .map((row) => normalizeDocumentTrackingRow(row as AppwriteRow))
-  } catch (error) {
-    if (isMissingDocumentTableError(error)) {
-      return demoDocumentTrackingRecords
-    }
-
-    throw error
-  }
+  return result.rows
+    .filter(isRecord)
+    .map((row) => normalizeDocumentTrackingRow(row as AppwriteRow))
 }

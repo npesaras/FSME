@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UploadCloud, Check, Info, ArrowLeft, ArrowRight, FileText, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, Info, ArrowLeft, ArrowRight, FileText, CheckCircle2 } from 'lucide-react';
 
 const STEPS = [
   'Personal Details',

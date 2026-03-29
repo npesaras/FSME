@@ -15,7 +15,7 @@ import {
 import { AccountSettings } from '../../../components/Faculty/AccountSettings'
 import { Calendar } from '../../../components/Faculty/Calendar'
 import { ChatView } from '../../../components/Faculty/ChatView'
-import { LoginMonitoringTable } from '../../../components/Faculty/LoginMonitoringTable'
+import { DocumentTrackingTable } from '../../../components/Faculty/DocumentTrackingTable'
 import { RecentActivities } from '../../../components/Faculty/RecentActivities'
 import { ScholarshipApplication } from '../../../components/Faculty/ScholarshipApplication'
 
@@ -222,7 +222,7 @@ export default function FacultyDashboard() {
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
                   <div className="space-y-6 lg:col-span-3">
-                    <LoginMonitoringTable />
+                    <DocumentTrackingTable />
                   </div>
                   <div className="space-y-6 lg:col-span-1">
                     <Calendar />

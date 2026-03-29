@@ -1,4 +1,4 @@
-import { appwrite, getAppwriteStatus } from '../../shared/appwrite.server'
+import { appwrite, getAppwriteStatus } from '../../plugins/appwrite.server'
 import { createAccountsService } from './accounts-service.server'
 import { config } from '../../shared/config.server'
 

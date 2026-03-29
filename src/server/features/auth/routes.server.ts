@@ -1,9 +1,7 @@
-import { z } from 'zod'
 import { authRuntime, type AuthRuntime } from './runtime.server'
 import { createClearedSessionCookieHeader, createSessionCookieHeader, getSessionSecretFromRequest } from './cookies.server'
 import {
   AppError,
-  createValidationError,
   errorResponse,
   jsonResponse,
 } from '../../shared/errors.server'
@@ -13,30 +11,7 @@ import {
   signInSchema,
   signUpSchema,
 } from './schemas'
-
-async function parseRequestJson<T>(request: Request, schema: z.ZodSchema<T>) {
-  let payload: unknown
-
-  try {
-    payload = await request.json()
-  } catch {
-    throw new AppError(400, 'The request body is invalid.', {
-      code: 'VALIDATION_ERROR',
-    })
-  }
-
-  const parsed = schema.safeParse(payload)
-
-  if (!parsed.success) {
-    throw createValidationError(parsed.error)
-  }
-
-  return parsed.data
-}
-
-function responseHeaders(headers: Record<string, string> = {}) {
-  return new Headers(headers)
-}
+import { createResponseHeaders, parseJsonRequest } from '../../utils/http.server'
 
 export async function handleHealthRequest(runtime: AuthRuntime = authRuntime) {
   try {
@@ -85,7 +60,7 @@ export async function handleAppwriteTablesRequest(runtime: AuthRuntime = authRun
 
 export async function handleSignUpRequest(request: Request, runtime: AuthRuntime = authRuntime) {
   try {
-    const payload = await parseRequestJson(request, signUpSchema)
+    const payload = await parseJsonRequest(request, signUpSchema)
     const { account, session } = await runtime.accounts.signUp(payload)
 
     return jsonResponse(
@@ -94,7 +69,7 @@ export async function handleSignUpRequest(request: Request, runtime: AuthRuntime
       },
       {
         status: 201,
-        headers: responseHeaders({
+        headers: createResponseHeaders({
           'set-cookie': createSessionCookieHeader(session.secret, {
             rememberSession: payload.remember !== false,
             expiresAt: session.expire,
@@ -109,7 +84,7 @@ export async function handleSignUpRequest(request: Request, runtime: AuthRuntime
 
 export async function handleSignInRequest(request: Request, runtime: AuthRuntime = authRuntime) {
   try {
-    const payload = await parseRequestJson(request, signInSchema)
+    const payload = await parseJsonRequest(request, signInSchema)
     const { account, session } = await runtime.accounts.signIn(payload)
 
     return jsonResponse(
@@ -117,7 +92,7 @@ export async function handleSignInRequest(request: Request, runtime: AuthRuntime
         account,
       },
       {
-        headers: responseHeaders({
+        headers: createResponseHeaders({
           'set-cookie': createSessionCookieHeader(session.secret, {
             rememberSession: payload.remember !== false,
             expiresAt: session.expire,
@@ -153,7 +128,7 @@ export async function handleCurrentAccountRequest(
   } catch (error) {
     if (error instanceof AppError && error.statusCode === 401) {
       return errorResponse(error, {
-        headers: responseHeaders({
+        headers: createResponseHeaders({
           'set-cookie': createClearedSessionCookieHeader(),
         }),
       })
@@ -175,13 +150,13 @@ export async function handleSignOutRequest(
       : { message: 'Signed out successfully.' }
 
     return jsonResponse(response, {
-      headers: responseHeaders({
+      headers: createResponseHeaders({
         'set-cookie': createClearedSessionCookieHeader(),
       }),
     })
   } catch (error) {
     return errorResponse(error, {
-      headers: responseHeaders({
+      headers: createResponseHeaders({
         'set-cookie': createClearedSessionCookieHeader(),
       }),
     })
@@ -193,7 +168,7 @@ export async function handleForgotPasswordRequest(
   runtime: AuthRuntime = authRuntime
 ) {
   try {
-    const payload = await parseRequestJson(request, forgotPasswordSchema)
+    const payload = await parseJsonRequest(request, forgotPasswordSchema)
     const response = await runtime.accounts.forgotPassword(payload)
 
     return jsonResponse(response)
@@ -207,7 +182,7 @@ export async function handleResetPasswordRequest(
   runtime: AuthRuntime = authRuntime
 ) {
   try {
-    const payload = await parseRequestJson(request, resetPasswordSchema)
+    const payload = await parseJsonRequest(request, resetPasswordSchema)
     const response = await runtime.accounts.resetPassword(payload)
 
     return jsonResponse(response)

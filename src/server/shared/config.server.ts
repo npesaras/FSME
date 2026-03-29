@@ -2,6 +2,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
+import {
+  readBoolean,
+  readEnv,
+  readOrigins,
+  readRequiredEnv,
+  readSameSite,
+} from '../utils/env.server'
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(currentDir, '../../../')
@@ -23,63 +30,15 @@ for (const envPath of envPaths) {
   }
 }
 
-function readEnv(keys: string[], fallback?: string) {
-  for (const key of keys) {
-    const value = process.env[key]
-
-    if (typeof value === 'string' && value.trim() !== '') {
-      return value.trim()
-    }
-  }
-
-  return fallback
-}
-
-function readRequiredEnv(keys: string[]) {
-  const value = readEnv(keys)
-
-  if (!value) {
-    throw new Error(`Missing required environment variable. Tried: ${keys.join(', ')}`)
-  }
-
-  return value
-}
-
-function readBoolean(keys: string[], fallback: boolean) {
-  const value = readEnv(keys, fallback ? 'true' : 'false')?.toLowerCase()
-
-  if (value === 'true') {
-    return true
-  }
-
-  if (value === 'false') {
-    return false
-  }
-
-  throw new Error(`Invalid boolean value for ${keys.join(', ')}: ${value}`)
-}
-
-function readOrigins(keys: string[], fallback: string) {
-  return String(readEnv(keys, fallback))
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-}
-
-function readSameSite(keys: string[], fallback: 'lax' | 'strict' | 'none') {
-  const value = readEnv(keys, fallback)?.toLowerCase()
-
-  if (value === 'lax' || value === 'strict' || value === 'none') {
-    return value
-  }
-
-  throw new Error(`Invalid sameSite value for ${keys.join(', ')}: ${value}`)
-}
-
 const defaultOrigins = 'http://127.0.0.1:3000,http://localhost:3000'
+const nodeEnv = readEnv(['NODE_ENV'], 'development')!
 
 export const config = {
   envPaths,
+  server: {
+    nodeEnv,
+    logRequests: readBoolean(['LOG_SERVER_REQUESTS'], nodeEnv !== 'production'),
+  },
   auth: {
     cookieName: readEnv(['AUTH_COOKIE_NAME'], 'fsme_session')!,
     cookieSameSite: readSameSite(['AUTH_COOKIE_SAME_SITE'], 'lax'),

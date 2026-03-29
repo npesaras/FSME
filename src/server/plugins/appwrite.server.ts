@@ -1,6 +1,6 @@
 import { Account, Client, Health, TablesDB, Users } from 'node-appwrite'
 import type { Models } from 'node-appwrite'
-import { config } from './config.server'
+import { config } from '../shared/config.server'
 
 const adminClient = new Client()
   .setEndpoint(config.appwrite.endpoint)

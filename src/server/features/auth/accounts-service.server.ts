@@ -1,6 +1,7 @@
 import { ID, Query, type Models } from 'node-appwrite'
 import type { AuthAccount, AuthMessageResponse, AuthRole, AuthSession } from '#/features/auth/types'
 import { AppError } from '../../shared/errors.server'
+import type { ServerLogger } from '../../types/logger'
 import {
   createLegacyAccountsRepository,
   normalizeEmail,
@@ -75,9 +76,7 @@ type AccountsServiceDependencies = {
   databaseId: string
   tableId: string
   recoveryOrigins: string[]
-  logger?: {
-    warn?: (...args: unknown[]) => void
-  }
+  logger?: ServerLogger
 }
 
 function normalizeOrigin(origin: string) {

@@ -263,7 +263,7 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
                   </div>
                   <div className="space-y-6 lg:col-span-1">
                     <Calendar />
-                    <RecentActivities />
+                    <RecentActivities accountId={accountId} />
                   </div>
                 </div>
               </>

@@ -146,6 +146,75 @@ export const appwriteTableSchemas = {
       },
     ],
   },
+  recentActivities: {
+    id: 'recent_activities',
+    name: 'Recent Activities',
+    status: 'live',
+    description:
+      'Faculty-facing dashboard activity feed for recent workflow updates and alerts.',
+    columns: [
+      {
+        key: 'applicant_id',
+        kind: 'varchar',
+        required: true,
+        size: 255,
+        description: 'Authenticated faculty account ID that owns the activity entry.',
+      },
+      {
+        key: 'application_id',
+        kind: 'varchar',
+        required: false,
+        size: 255,
+        description: 'Optional scholarship application ID related to the activity.',
+      },
+      {
+        key: 'activity_type',
+        kind: 'varchar',
+        required: true,
+        size: 128,
+        description: 'Machine-friendly activity category for filtering and future automation.',
+      },
+      {
+        key: 'title',
+        kind: 'varchar',
+        required: true,
+        size: 255,
+        description: 'Short activity title shown in the recent activities card.',
+      },
+      {
+        key: 'description',
+        kind: 'text',
+        required: true,
+        description: 'Long-form activity summary shown beneath the card title.',
+      },
+      {
+        key: 'occurred_at',
+        kind: 'datetime',
+        required: true,
+        description: 'Timestamp used to order recent activity items in the dashboard.',
+      },
+    ],
+    indexes: [
+      {
+        key: 'recent_activities_applicant_id',
+        type: 'key',
+        columns: ['applicant_id'],
+        orders: ['asc'],
+      },
+      {
+        key: 'recent_activities_activity_type',
+        type: 'key',
+        columns: ['activity_type'],
+        orders: ['asc'],
+      },
+      {
+        key: 'recent_activities_occurred_at',
+        type: 'key',
+        columns: ['occurred_at'],
+        orders: ['desc'],
+      },
+    ],
+  },
   userProfiles: {
     id: 'user_profiles',
     name: 'User Profiles',

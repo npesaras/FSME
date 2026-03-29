@@ -1,26 +1,13 @@
-interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { recentActivitiesQueryOptions } from '@/features/faculty/recent-activities.queries'
+
+interface RecentActivitiesProps {
+  accountId: string
 }
 
-const activities: Activity[] = [
-  {
-    id: '1',
-    title: 'Paper Rejected',
-    description: 'Your recent submission "A Study on AI in Education" has been rejected with remarks from the review committee.',
-    time: '2 hours ago'
-  },
-  {
-    id: '2',
-    title: 'Document Update Required',
-    description: 'Author Dr. Smith has left remarks and requested revisions for the "Research Grant Proposal Draft".',
-    time: 'Today, 3:15PM'
-  }
-];
+export const RecentActivities = ({ accountId }: RecentActivitiesProps) => {
+  const { data } = useSuspenseQuery(recentActivitiesQueryOptions(accountId))
 
-export const RecentActivities = () => {
   return (
     <div className="faculty-panel rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
@@ -28,26 +15,35 @@ export const RecentActivities = () => {
       </div>
 
       <div className="space-y-3">
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="faculty-panel-subtle rounded-md p-3"
-          >
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {activity.title}
-                </h3>
-                <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                  {activity.description}
-                </p>
-                <p className="pt-0.5 text-[10px] font-medium text-muted-foreground/80">
-                  {activity.time}
-                </p>
+        {data.length ? (
+          data.map((activity) => (
+            <div
+              key={activity.id}
+              className="faculty-panel-subtle rounded-md p-3"
+            >
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {activity.title}
+                  </h3>
+                  <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                    {activity.description}
+                  </p>
+                  <p className="pt-0.5 text-[10px] font-medium text-muted-foreground/80">
+                    {activity.timeLabel}
+                  </p>
+                </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="faculty-panel-subtle rounded-md p-4">
+            <p className="text-sm font-semibold text-foreground">No recent activities yet</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              New submissions, review remarks, and document updates will appear here.
+            </p>
           </div>
-        ))}
+        )}
       </div>
 
       <div className="mt-4 border-t border-border/60 pt-3 text-center">
@@ -56,5 +52,5 @@ export const RecentActivities = () => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}

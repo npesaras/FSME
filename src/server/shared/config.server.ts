@@ -54,6 +54,10 @@ export const config = {
       ['APPWRITE_DOCUMENT_TRACKING_TABLE_ID', 'VITE_APPWRITE_DOCUMENT_TRACKING_TABLE_ID'],
       'document_tracking'
     )!,
+    recentActivitiesTableId: readEnv(
+      ['APPWRITE_RECENT_ACTIVITIES_TABLE_ID', 'VITE_APPWRITE_RECENT_ACTIVITIES_TABLE_ID'],
+      'recent_activities'
+    )!,
     recoveryOrigins: readOrigins(['APPWRITE_AUTH_RECOVERY_ORIGINS'], defaultOrigins),
   },
 } as const

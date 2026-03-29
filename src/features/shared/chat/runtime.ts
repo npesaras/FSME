@@ -2,7 +2,7 @@ import {
   CometChatUIKit,
   UIKitSettingsBuilder,
 } from '@cometchat/chat-uikit-react'
-import { setupLocalization } from '../../../CometChat/utils/utils'
+import { setupLocalization } from '#/cometChat/utils/utils'
 import type { CometChatRoleConfig } from './config'
 
 type CometChatCoreConfig = Pick<

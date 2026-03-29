@@ -1,5 +1,23 @@
 import { CometChatLocalize } from '@cometchat/chat-uikit-react';
 import englishUS from '../locales/en-US/en-US.json';
+import englishGB from '../locales/en-GB/en-GB.json';
+import german from '../locales/de/de.json';
+import spanish from '../locales/es/es.json';
+import french from '../locales/fr/fr.json';
+import hindi from '../locales/hi/hi.json';
+import hungarian from '../locales/hu/hu.json';
+import lithuanian from '../locales/lt/lt.json';
+import malay from '../locales/ms/ms.json';
+import portuguese from '../locales/pt/pt.json';
+import russian from '../locales/ru/ru.json';
+import swedish from '../locales/sv/sv.json';
+import chinese from '../locales/zh/zh.json';
+import chineseTaiwan from '../locales/zh-tw/zh-tw.json';
+import japanese from '../locales/ja/ja.json';
+import korean from '../locales/ko/ko.json';
+import turkish from '../locales/tr/tr.json';
+import italian from '../locales/it/it.json';
+import dutch from '../locales/nl/nl.json';
 
 /**
  * Initializes the localization for both the sample app and the UI Kit.
@@ -20,6 +38,24 @@ import englishUS from '../locales/en-US/en-US.json';
 export function setupLocalization(language?: string) {
   const resourcesJson = {
     'en-US': englishUS,
+    'en-GB': englishGB,
+    ru: russian,
+    fr: french,
+    de: german,
+    zh: chinese,
+    'zh-TW': chineseTaiwan,
+    es: spanish,
+    hi: hindi,
+    ms: malay,
+    pt: portuguese,
+    sv: swedish,
+    lt: lithuanian,
+    hu: hungarian,
+    it: italian,
+    ja: japanese,
+    ko: korean,
+    nl: dutch,
+    tr: turkish,
   };
   CometChatLocalize.addTranslation(resourcesJson);
   CometChatLocalize.setCurrentLanguage(language ?? 'en-US');

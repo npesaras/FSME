@@ -1,8 +1,9 @@
+import type { RouterContext } from '../router-context'
 import {
   HeadContent,
   Scripts,
   Link,
-  createRootRoute,
+  createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -12,7 +13,7 @@ import appCss from '../styles.css?url'
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark')?stored:'light';window.localStorage.setItem('theme',mode);var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(mode);root.setAttribute('data-theme',mode);root.style.colorScheme=mode;}catch(e){}})();`
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => ({
     account: await getAuthenticatedAccountOrNull(),
   }),

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { CometChatProvider } from '#/CometChat/context/CometChatContext'
-import CometChatApp from '#/CometChat/CometChatApp'
+import CometChatApp from '#/cometChat/CometChatApp'
+import { CometChatProvider } from '#/cometChat/context/CometChatContext'
 import type { CometChatRoleConfig } from '../config'
 import { ensureCometChatRoleSession } from '../runtime'
+import { ChatStatusPanel } from './ChatStatusPanel'
 
 type ChatState =
   | { status: 'loading' }
@@ -34,30 +35,6 @@ function formatError(error: unknown) {
   }
 
   return 'CometChat could not be initialized for this workspace.'
-}
-
-function ChatStatusPanel({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description: string
-  children?: React.ReactNode
-}) {
-  return (
-    <div className="flex h-full min-h-[680px] w-full items-center justify-center px-6 py-10 sm:px-10">
-      <div className="w-full max-w-2xl rounded-[1.75rem] border border-border bg-card/90 p-6 shadow-sm backdrop-blur-[4px] sm:p-8">
-        <h2 className="m-0 text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-          {description}
-        </p>
-        {children}
-      </div>
-    </div>
-  )
 }
 
 export default function CometChatWorkspacePanel({
@@ -120,7 +97,7 @@ export default function CometChatWorkspacePanel({
     return (
       <ChatStatusPanel
         title="CometChat needs configuration"
-        description="Add the missing Vite environment variables below in `frontend/.env`, then restart the frontend dev server."
+        description="Add the missing Vite environment variables below in `.env`, then restart the frontend dev server."
       >
         <div className="mt-5 rounded-2xl border border-dashed border-border bg-muted/30 p-4">
           <p className="m-0 text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">

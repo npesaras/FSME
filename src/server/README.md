@@ -11,6 +11,10 @@ src/server/
     request-logger.ts
   plugins/
     appwrite.server.ts
+  schema/
+    index.ts
+    tables.ts
+    types.ts
   shared/
     config.server.ts
     errors.server.ts
@@ -37,6 +41,7 @@ src/server/
 - Put cross-cutting request behavior in `middlewares/`.
 - Put external service adapters and SDK clients in `plugins/`.
 - Put reusable server infrastructure in `shared/`.
+- Put Appwrite table definitions and server-side schema metadata in `schema/`.
 - Put small reusable helpers in `utils/`.
 - Put server-only contracts in `types/`.
 - Put business logic that belongs to a product area in `features/<feature>/`.

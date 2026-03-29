@@ -1,62 +1,12 @@
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { FileText } from 'lucide-react'
 import { type ColumnDef } from '@tanstack/react-table'
 
 import { DataTable } from '@/components/ui/data-table'
+import { documentTrackingQueryOptions } from '@/features/faculty/document-tracking.queries'
+import type { DocumentTrackingRecord } from '@/features/faculty/document-tracking'
 
-interface DocumentLog {
-  id: string
-  date: string
-  status: 'Accepted' | 'Pending' | 'Rejected'
-  fileName: string
-  remarks: string
-}
-
-const documentLogs: DocumentLog[] = [
-  {
-    id: '1',
-    date: 'Oct 24, 2023 10:30 AM',
-    status: 'Pending',
-    fileName: 'Q3_Financial_Report.pdf',
-    remarks: 'Awaiting department head signature',
-  },
-  {
-    id: '2',
-    date: 'Oct 23, 2023 04:15 PM',
-    status: 'Accepted',
-    fileName: 'Student_Enrollment_List_2023.xlsx',
-    remarks: 'Approved by Registrar',
-  },
-  {
-    id: '3',
-    date: 'Oct 22, 2023 09:00 AM',
-    status: 'Pending',
-    fileName: 'Teacher_Syllabus_Math101.docx',
-    remarks: 'Under review by Curriculum Dept',
-  },
-  {
-    id: '4',
-    date: 'Oct 21, 2023 02:45 PM',
-    status: 'Accepted',
-    fileName: 'Facility_Maintenance_Request.pdf',
-    remarks: 'Scheduled for next week',
-  },
-  {
-    id: '5',
-    date: 'Oct 20, 2023 11:20 AM',
-    status: 'Rejected',
-    fileName: 'Field_Trip_Proposal.pdf',
-    remarks: 'Missing budget breakdown',
-  },
-  {
-    id: '6',
-    date: 'Oct 19, 2023 03:50 PM',
-    status: 'Accepted',
-    fileName: 'Annual_Budget_Review.xlsx',
-    remarks: 'Approved by Finance',
-  },
-]
-
-const columns: ColumnDef<DocumentLog>[] = [
+const columns: ColumnDef<DocumentTrackingRecord>[] = [
   {
     accessorKey: 'date',
     header: () => (
@@ -143,7 +93,13 @@ const columns: ColumnDef<DocumentLog>[] = [
   },
 ]
 
-export function DocumentTrackingTable() {
+interface DocumentTrackingTableProps {
+  accountId: string
+}
+
+export function DocumentTrackingTable({ accountId }: DocumentTrackingTableProps) {
+  const { data } = useSuspenseQuery(documentTrackingQueryOptions(accountId))
+
   return (
     <div className="faculty-panel overflow-hidden rounded-lg">
       <div className="flex items-center justify-between border-b border-border/70 p-6">
@@ -161,8 +117,9 @@ export function DocumentTrackingTable() {
 
       <DataTable
         columns={columns}
-        data={documentLogs}
+        data={data}
         getRowId={(row) => row.id}
+        emptyMessage="No uploaded documents yet."
         headerRowClassName="border-border/60 bg-accent/45 hover:bg-accent/45"
         rowClassName="border-border/40 hover:bg-accent/25"
       />

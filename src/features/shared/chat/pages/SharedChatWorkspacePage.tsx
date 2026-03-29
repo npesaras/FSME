@@ -4,6 +4,7 @@ import type { ScopeLink } from '../../components/ScopePage'
 import ScopePage from '../../components/ScopePage'
 import type { ChatActor } from '../config'
 import { getCometChatRoleConfig } from '../config'
+import { ChatStatusPanel } from '../components/ChatStatusPanel'
 
 const LazyCometChatWorkspacePanel = lazy(
   () => import('../components/CometChatWorkspacePanel'),
@@ -15,27 +16,6 @@ type SharedChatWorkspacePageProps = {
   title: string
   description: string
   links: ScopeLink[]
-}
-
-function ChatStatusPanel({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
-  return (
-    <div className="flex h-full min-h-[680px] w-full items-center justify-center px-6 py-10 sm:px-10">
-      <div className="w-full max-w-2xl rounded-[1.75rem] border border-border bg-card/90 p-6 shadow-sm backdrop-blur-[4px] sm:p-8">
-        <h2 className="m-0 text-2xl font-semibold tracking-tight text-foreground">
-          {title}
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-          {description}
-        </p>
-      </div>
-    </div>
-  )
 }
 
 export default function SharedChatWorkspacePage({

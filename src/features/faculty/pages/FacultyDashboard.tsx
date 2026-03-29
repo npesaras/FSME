@@ -12,12 +12,12 @@ import {
   Settings,
 } from 'lucide-react'
 
-import { AccountSettings } from '../../../components/Faculty/AccountSettings'
-import { Calendar } from '../../../components/Faculty/Calendar'
-import { ChatView } from '../../../components/Faculty/ChatView'
-import { DocumentTrackingTable } from '../../../components/Faculty/DocumentTrackingTable'
-import { RecentActivities } from '../../../components/Faculty/RecentActivities'
-import { ScholarshipApplication } from '../../../components/Faculty/ScholarshipApplication'
+import { AccountSettings } from '../components/AccountSettings'
+import { Calendar } from '../components/Calendar'
+import { FacultyChatView } from '../components/FacultyChatView'
+import { DocumentTrackingTable } from '../components/DocumentTrackingTable'
+import { RecentActivities } from '../components/RecentActivities'
+import { ScholarshipApplication } from '../components/ScholarshipApplication'
 
 interface NavItemProps {
   icon: ReactNode
@@ -43,11 +43,10 @@ const SidebarItem = ({ icon, label, active, subItems, onNavigate }: NavItemProps
     <div className="mb-1">
       <div
         onClick={toggleMenu}
-        className={`flex cursor-pointer items-center justify-between px-4 py-3 transition-colors ${
-          active
+        className={`flex cursor-pointer items-center justify-between px-4 py-3 transition-colors ${active
             ? 'border-r-4 border-primary bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
-        }`}
+          }`}
       >
         <div className="flex items-center gap-3">
           <div className={active ? 'text-primary' : 'text-muted-foreground'}>
@@ -85,7 +84,11 @@ const SidebarItem = ({ icon, label, active, subItems, onNavigate }: NavItemProps
   )
 }
 
-export default function FacultyDashboard() {
+interface FacultyDashboardProps {
+  accountId: string
+}
+
+export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
   const [currentView, setCurrentView] = useState('dashboard')
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
@@ -196,7 +199,7 @@ export default function FacultyDashboard() {
 
         {currentView === 'chat' ? (
           <div className="flex-1 flex">
-            <ChatView />
+            <FacultyChatView />
           </div>
         ) : (
           <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
@@ -222,7 +225,7 @@ export default function FacultyDashboard() {
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
                   <div className="space-y-6 lg:col-span-3">
-                    <DocumentTrackingTable />
+                    <DocumentTrackingTable accountId={accountId} />
                   </div>
                   <div className="space-y-6 lg:col-span-1">
                     <Calendar />

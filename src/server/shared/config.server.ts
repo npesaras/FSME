@@ -50,6 +50,10 @@ export const config = {
     apiKey: readRequiredEnv(['APPWRITE_API_KEY']),
     databaseId: readRequiredEnv(['APPWRITE_DATABASE_ID']),
     accountsTableId: readEnv(['APPWRITE_ACCOUNTS_TABLE_ID'], 'accounts')!,
+    documentTrackingTableId: readEnv(
+      ['APPWRITE_DOCUMENT_TRACKING_TABLE_ID', 'VITE_APPWRITE_DOCUMENT_TRACKING_TABLE_ID'],
+      'document_tracking'
+    )!,
     recoveryOrigins: readOrigins(['APPWRITE_AUTH_RECOVERY_ORIGINS'], defaultOrigins),
   },
 } as const

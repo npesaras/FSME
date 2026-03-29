@@ -382,7 +382,7 @@ export default function SignupPage() {
         <span className="text-slate-600">Already have an account? </span>
         <Link
           to="/sign-in"
-          className="font-semibold text-[#156a63] hover:text-[#0f544e] hover:underline"
+          className="font-semibold text-[#156a63] hover:text-[#0d4f4f] hover:underline"
         >
           Sign In
         </Link>

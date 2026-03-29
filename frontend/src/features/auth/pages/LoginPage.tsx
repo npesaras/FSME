@@ -253,7 +253,7 @@ export default function LoginPage() {
         <span className="text-slate-600">Don&apos;t have an account? </span>
         <Link
           to="/signup"
-          className="font-semibold text-[#156a63] hover:text-[#0f544e] hover:underline"
+          className="font-semibold text-[#156a63] hover:text-[#0d4f4f] hover:underline"
         >
           Create Account
         </Link>

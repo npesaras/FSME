@@ -55,60 +55,60 @@ const documentLogs: DocumentLog[] = [
 
 export const LoginMonitoringTable = () => {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+    <div className="faculty-panel overflow-hidden rounded-lg">
+      <div className="flex items-center justify-between border-b border-border/70 p-6">
         <div>
-          <h2 className="text-lg font-bold text-slate-800">Document Tracking</h2>
-          <p className="text-slate-500 text-sm mt-1">Real-time document submission and approval tracking</p>
+          <h2 className="text-lg font-bold text-foreground">Document Tracking</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Real-time document submission and approval tracking</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-[#1E847C] animate-pulse"></span>
-          <span className="text-xs font-medium text-[#1E847C]">Live Updates</span>
+          <span className="flex h-2 w-2 animate-pulse rounded-full bg-primary"></span>
+          <span className="text-xs font-medium text-primary">Live Updates</span>
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[20%]">Date</th>
-              <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[20%]">Status</th>
-              <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[30%]">File Name</th>
-              <th className="py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider w-[30%]">Remarks</th>
+            <tr className="border-b border-border/60 bg-accent/45">
+              <th className="w-[20%] px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+              <th className="w-[20%] px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+              <th className="w-[30%] px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">File Name</th>
+              <th className="w-[30%] px-6 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Remarks</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-border/40">
             {documentLogs.map((doc) => (
-              <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
+              <tr key={doc.id} className="transition-colors hover:bg-accent/25">
                 <td className="py-4 px-6">
                   <div>
-                    <div className="font-semibold text-slate-900 text-sm">{doc.date}</div>
+                    <div className="text-sm font-semibold text-foreground">{doc.date}</div>
                   </div>
                 </td>
                 <td className="py-4 px-6">
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                     doc.status === 'Accepted'
-                      ? 'bg-[#1E847C]/5 text-[#1E847C] border-[#1E847C]/20'
+                      ? 'border-primary/20 bg-primary/5 text-primary'
                       : doc.status === 'Pending'
                       ? 'bg-amber-50 text-amber-700 border-amber-200/60'
-                      : 'bg-red-50 text-red-700 border-red-200/60'
+                      : 'border-destructive/20 bg-destructive/10 text-destructive'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                      doc.status === 'Accepted' ? 'bg-[#1E847C]' :
+                      doc.status === 'Accepted' ? 'bg-primary' :
                       doc.status === 'Pending' ? 'bg-amber-500' :
-                      'bg-red-500'
+                      'bg-destructive'
                     }`}></span>
                     {doc.status}
                   </span>
                 </td>
                 <td className="py-4 px-6">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#1E847C]" />
-                    <span className="text-[#1E847C] font-medium text-sm hover:underline cursor-pointer truncate max-w-[200px]">{doc.fileName}</span>
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="max-w-[200px] cursor-pointer truncate text-sm font-medium text-primary hover:underline">{doc.fileName}</span>
                   </div>
                 </td>
                 <td className="py-4 px-6">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-muted-foreground">
                     {doc.remarks}
                   </span>
                 </td>

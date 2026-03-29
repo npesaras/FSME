@@ -90,8 +90,8 @@ export default function FacultyDashboard() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen w-full overflow-hidden bg-background font-sans text-foreground">
-      <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col overflow-y-auto border-r border-border bg-card md:flex">
+    <div className="faculty-shell flex min-h-screen w-full overflow-hidden font-sans text-foreground">
+      <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col overflow-y-auto border-r border-border/80 bg-card md:flex">
         <div className="p-6 flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Globe className="h-5 w-5" />
@@ -134,7 +134,7 @@ export default function FacultyDashboard() {
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/80 bg-card px-6">
           <div className="flex items-center gap-4 flex-1">
             <button className="md:hidden">
               <Menu className="h-6 w-6 text-muted-foreground" />
@@ -169,7 +169,7 @@ export default function FacultyDashboard() {
               </button>
 
               {isProfileOpen && (
-                <div className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 rounded-xl border border-border bg-popover py-2 text-popover-foreground shadow-lg">
+                <div className="faculty-panel animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 rounded-xl bg-popover py-2 text-popover-foreground shadow-lg">
                   <button
                     onClick={() => {
                       setCurrentView('account-setting')
@@ -203,21 +203,19 @@ export default function FacultyDashboard() {
             {currentView === 'dashboard' && (
               <>
                 <section className="mb-6">
-                  <div className="relative flex min-h-[160px] w-full items-center justify-between overflow-hidden rounded-[1.5rem] bg-primary p-6 text-primary-foreground shadow-sm">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklab,var(--secondary)_55%,transparent)_0%,transparent_48%)] opacity-80" />
-                    <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(255,255,255,0.08)_100%)]" />
+                  <div className="faculty-hero relative flex min-h-[160px] w-full items-center justify-between overflow-hidden rounded-[1.5rem] p-6 text-primary-foreground">
                     <div className="relative z-10 flex h-full max-w-[60%] flex-col justify-center">
-                      <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-primary-foreground/70 uppercase">
+                      <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-primary-foreground/72 uppercase">
                         Faculty Workspace
                       </p>
                       <h1 className="mb-2 text-2xl font-bold md:text-3xl [font-family:var(--font-heading)]">
                         Welcome back, Juan!
                       </h1>
-                      <p className="text-sm text-primary-foreground/80">Faculty Scholarship</p>
+                      <p className="text-sm text-primary-foreground/82">Faculty Scholarship</p>
                     </div>
                     <div className="z-10 hidden pr-8 text-right md:block">
                       <div className="text-3xl font-bold text-primary-foreground">Thursday, 7:30 PM</div>
-                      <div className="mt-1 text-lg font-semibold text-primary-foreground/70">09 Feb 2024</div>
+                      <div className="mt-1 text-lg font-semibold text-primary-foreground/72">09 Feb 2024</div>
                     </div>
                   </div>
                 </section>

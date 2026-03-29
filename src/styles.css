@@ -300,6 +300,90 @@ pre code {
   border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
 }
 
+.faculty-shell {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in oklab, var(--secondary) 12%, transparent) 0%,
+      transparent 28%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--background) 72%, var(--muted) 28%),
+      var(--background)
+    );
+}
+
+.faculty-panel {
+  border: 1px solid color-mix(in oklab, var(--border) 90%, white 10%);
+  background: var(--card);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 82%, transparent) inset,
+    0 12px 24px color-mix(in oklab, var(--foreground) 5%, transparent);
+}
+
+.faculty-panel-subtle {
+  border: 1px solid color-mix(in oklab, var(--border) 88%, white 12%);
+  background: color-mix(in oklab, var(--card) 84%, var(--muted) 16%);
+}
+
+.faculty-hero {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in oklab, var(--secondary) 42%, transparent) 0%,
+      transparent 42%
+    ),
+    linear-gradient(
+      135deg,
+      var(--primary) 0%,
+      color-mix(in oklab, var(--primary) 62%, var(--secondary) 38%) 100%
+    );
+  box-shadow:
+    0 18px 36px color-mix(in oklab, var(--primary) 18%, transparent),
+    0 1px 0 color-mix(in oklab, white 28%, transparent) inset;
+}
+
+.faculty-input {
+  border: 1px solid transparent;
+  background: color-mix(in oklab, var(--card) 82%, var(--muted) 18%);
+  color: var(--foreground);
+  outline: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.faculty-input::placeholder {
+  color: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
+}
+
+.faculty-input:focus {
+  border-color: color-mix(in oklab, var(--primary) 70%, transparent);
+  background: var(--card);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 14%, transparent);
+}
+
+.faculty-button-muted {
+  border: 1px solid color-mix(in oklab, var(--border) 88%, white 12%);
+  background: color-mix(in oklab, var(--accent) 78%, var(--card) 22%);
+  color: var(--foreground);
+}
+
+.faculty-button-muted:hover {
+  background: color-mix(in oklab, var(--accent) 92%, transparent);
+}
+
+.faculty-button-solid {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.faculty-button-solid:hover {
+  background: color-mix(in oklab, var(--foreground) 92%, black 8%);
+}
+
 button,
 .island-shell,
 a {

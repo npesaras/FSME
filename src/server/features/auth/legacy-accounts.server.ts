@@ -1,5 +1,5 @@
 import { Query } from 'node-appwrite'
-import { AppError } from './errors.server'
+import { AppError } from '../../shared/errors.server'
 
 const LEGACY_SCRYPT_OPTIONS = Object.freeze({
   cpu: 16384,

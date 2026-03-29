@@ -1,6 +1,6 @@
 import { ID, Query, type Models } from 'node-appwrite'
 import type { AuthAccount, AuthMessageResponse, AuthRole, AuthSession } from '#/features/auth/types'
-import { AppError } from './errors.server'
+import { AppError } from '../../shared/errors.server'
 import {
   createLegacyAccountsRepository,
   normalizeEmail,

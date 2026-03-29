@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { handleSignInRequest } from '#/server/auth/routes.server'
+import { handleSignInRequest } from '#/server/features/auth/routes.server'
 
 export const Route = createFileRoute('/api/v1/auth/sign-in')({
   server: {

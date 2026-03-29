@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
-import { getSessionSecretFromRequest } from '#/server/auth/cookies.server'
-import { AppError } from '#/server/auth/errors.server'
-import { authRuntime } from '#/server/auth/runtime.server'
+import { getSessionSecretFromRequest } from '#/server/features/auth/cookies.server'
+import { authRuntime } from '#/server/features/auth/runtime.server'
+import { AppError } from '#/server/shared/errors.server'
 import type { AuthAccount } from './types'
 
 export const getCurrentAccountServerFn = createServerFn({ method: 'GET' }).handler(

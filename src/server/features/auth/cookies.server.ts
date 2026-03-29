@@ -1,5 +1,5 @@
 import { parse, serialize, type SerializeOptions } from 'cookie'
-import { config } from './config.server'
+import { config } from '../../shared/config.server'
 
 function getBaseCookieOptions(): SerializeOptions {
   return {

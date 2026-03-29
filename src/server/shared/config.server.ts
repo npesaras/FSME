@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url))
-const repoRoot = path.resolve(currentDir, '../../../../')
+const repoRoot = path.resolve(currentDir, '../../../')
 
 const candidateEnvPaths = [
   path.resolve(repoRoot, '.env'),

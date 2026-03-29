@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { handleResetPasswordRequest } from '#/server/auth/routes.server'
+import { handleResetPasswordRequest } from '#/server/features/auth/routes.server'
 
 export const Route = createFileRoute('/api/v1/auth/reset-password')({
   server: {

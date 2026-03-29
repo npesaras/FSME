@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { handleCurrentAccountRequest } from '#/server/auth/routes.server'
+import { handleCurrentAccountRequest } from '#/server/features/auth/routes.server'
 
 export const Route = createFileRoute('/api/v1/auth/me')({
   server: {

@@ -4,7 +4,7 @@ import {
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
-} from '../../src/server/auth/schemas'
+} from '../../src/server/features/auth/schemas'
 
 describe('auth request schemas', () => {
   it('accepts a valid sign-up payload', () => {

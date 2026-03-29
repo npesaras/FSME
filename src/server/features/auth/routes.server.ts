@@ -1,7 +1,12 @@
 import { z } from 'zod'
 import { authRuntime, type AuthRuntime } from './runtime.server'
 import { createClearedSessionCookieHeader, createSessionCookieHeader, getSessionSecretFromRequest } from './cookies.server'
-import { AppError, createValidationError, errorResponse, jsonResponse } from './errors.server'
+import {
+  AppError,
+  createValidationError,
+  errorResponse,
+  jsonResponse,
+} from '../../shared/errors.server'
 import {
   forgotPasswordSchema,
   resetPasswordSchema,

@@ -1,6 +1,6 @@
-import { appwrite, getAppwriteStatus } from './appwrite.server'
+import { appwrite, getAppwriteStatus } from '../../shared/appwrite.server'
 import { createAccountsService } from './accounts-service.server'
-import { config } from './config.server'
+import { config } from '../../shared/config.server'
 
 export const authRuntime = {
   config,

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import {
   LayoutDashboard,
   Globe,
@@ -12,6 +13,7 @@ import {
   Settings,
 } from 'lucide-react'
 
+import { signOut } from '../../auth/api'
 import { AccountSettings } from '../components/AccountSettings'
 import { Calendar } from '../components/Calendar'
 import { FacultyChatView } from '../components/FacultyChatView'
@@ -89,8 +91,31 @@ interface FacultyDashboardProps {
 }
 
 export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
+  const navigate = useNavigate()
+  const router = useRouter()
   const [currentView, setCurrentView] = useState('dashboard')
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const handleSignOut = async () => {
+    if (isSigningOut) {
+      return
+    }
+
+    setIsSigningOut(true)
+    setIsProfileOpen(false)
+
+    try {
+      await signOut()
+    } finally {
+      await router.invalidate()
+      await navigate({
+        to: '/sign-in',
+        replace: true,
+      })
+      setIsSigningOut(false)
+    }
+  }
 
   return (
     <div className="faculty-shell flex min-h-screen w-full overflow-hidden font-sans text-foreground">
@@ -132,7 +157,13 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
 
           <div className="mx-4 my-4 border-t border-border/70"></div>
 
-          <SidebarItem icon={<LogOut size={20} />} label="Logout" />
+          <SidebarItem
+            icon={<LogOut size={20} />}
+            label={isSigningOut ? 'Signing Out...' : 'Logout'}
+            onNavigate={() => {
+              void handleSignOut()
+            }}
+          />
         </nav>
       </aside>
 
@@ -185,11 +216,14 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
                   </button>
                   <div className="my-1 h-px bg-border"></div>
                   <button
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={() => {
+                      void handleSignOut()
+                    }}
+                    disabled={isSigningOut}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] font-medium text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <LogOut className="h-4 w-4 text-destructive" />
-                    Logout
+                    {isSigningOut ? 'Signing Out...' : 'Logout'}
                   </button>
                 </div>
               )}

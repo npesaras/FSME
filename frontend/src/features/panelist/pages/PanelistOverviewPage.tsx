@@ -26,13 +26,13 @@ export default function PanelistOverviewPage() {
         ].map(([title, description], index) => (
           <article
             key={title}
-            className="island-shell feature-card rise-in rounded-2xl p-5"
+            className="island-shell feature-card animate-rise-in rounded-2xl p-5"
             style={{ animationDelay: `${index * 90 + 80}ms` }}
           >
-            <h2 className="mb-2 text-base font-semibold text-[var(--sea-ink)]">
+            <h2 className="mb-2 text-base font-semibold text-foreground">
               {title}
             </h2>
-            <p className="m-0 text-sm leading-7 text-[var(--sea-ink-soft)]">
+            <p className="m-0 text-sm leading-7 text-muted-foreground">
               {description}
             </p>
           </article>

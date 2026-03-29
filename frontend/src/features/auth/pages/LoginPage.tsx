@@ -3,6 +3,21 @@ import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
+import {
+  authAlertClassName,
+  authCheckboxClassName,
+  authCheckboxLabelClassName,
+  authDividerLineClassName,
+  authDividerTextClassName,
+  authErrorTextClassName,
+  authFieldLabelClassName,
+  authIconButtonClassName,
+  authInputClassName,
+  authLinkClassName,
+  authPrimaryButtonClassName,
+  authSocialButtonClassName,
+  authTrailingIconClassName,
+} from '../components/authClassNames'
 import { AuthApiError, saveAuthSession, signIn } from '../api'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -39,13 +54,13 @@ export default function LoginPage() {
   })
 
   return (
-    <AuthSplitLayout
-      title="Welcome"
-      subtitle="Please enter your details to sign in"
+      <AuthSplitLayout
+        title="Welcome"
+        subtitle="Please enter your details to sign in"
     >
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
+        className={authSocialButtonClassName}
       >
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -69,10 +84,10 @@ export default function LoginPage() {
 
       <div className="relative my-8">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
+          <div className={authDividerLineClassName} />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <span className={authDividerTextClassName}>
             OR
           </span>
         </div>
@@ -88,7 +103,7 @@ export default function LoginPage() {
         className="space-y-5"
       >
         {submitError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div className={authAlertClassName}>
             {submitError}
           </div>
         ) : null}
@@ -114,10 +129,7 @@ export default function LoginPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-sm font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authFieldLabelClassName}>
                   Email Address
                 </label>
                 <div className="relative">
@@ -129,15 +141,15 @@ export default function LoginPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authInputClassName}
                     placeholder="Enter your email"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Mail className="h-4 w-4 text-slate-500" />
+                    <Mail className={authTrailingIconClassName} />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-sm font-medium text-red-600">{String(error)}</p>
+                  <p className={authErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -165,10 +177,7 @@ export default function LoginPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-sm font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authFieldLabelClassName}>
                   Password
                 </label>
                 <div className="relative">
@@ -180,23 +189,23 @@ export default function LoginPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authInputClassName}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    className={authIconButtonClassName}
                   >
                     {showPassword ? (
-                      <Eye className="h-4 w-4" />
+                      <Eye className={authTrailingIconClassName} />
                     ) : (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className={authTrailingIconClassName} />
                     )}
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-sm font-medium text-red-600">{String(error)}</p>
+                  <p className={authErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -214,11 +223,11 @@ export default function LoginPage() {
                   checked={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
+                  className={authCheckboxClassName}
                 />
                 <label
                   htmlFor={field.name}
-                  className="cursor-pointer select-none text-sm font-medium text-slate-700"
+                  className={authCheckboxLabelClassName}
                 >
                   Remember Me
                 </label>
@@ -228,7 +237,7 @@ export default function LoginPage() {
 
           <button
             type="button"
-            className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+            className="text-sm font-medium text-destructive/80 hover:text-destructive hover:underline"
           >
             Forgot Password?
           </button>
@@ -241,7 +250,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!canSubmit || isSubmitting}
-              className="mt-4 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              className={authPrimaryButtonClassName}
             >
               {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
@@ -250,10 +259,10 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-8 text-center text-sm">
-        <span className="text-slate-600">Don&apos;t have an account? </span>
+        <span className="text-muted-foreground">Don&apos;t have an account? </span>
         <Link
           to="/signup"
-          className="font-semibold text-[#156a63] hover:text-[#0d4f4f] hover:underline"
+          className={authLinkClassName}
         >
           Create Account
         </Link>

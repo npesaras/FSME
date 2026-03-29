@@ -4,12 +4,24 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 @plugin "@tailwindcss/typography";
 
 @theme {
   --font-sans: "Inter Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Fraunces", Georgia, serif;
+  --animate-rise-in: rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 :root {
@@ -51,27 +63,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-
-  /* Compatibility tokens for the existing app shell. */
-  --sea-ink: color-mix(in oklab, var(--foreground) 90%, var(--primary) 10%);
-  --sea-ink-soft: var(--muted-foreground);
-  --lagoon: var(--secondary);
-  --lagoon-deep: var(--primary);
-  --palm: color-mix(in oklab, var(--primary) 82%, #0f5b5b 18%);
-  --sand: color-mix(in oklab, var(--background) 88%, var(--accent) 12%);
-  --foam: color-mix(in oklab, var(--background) 82%, var(--muted) 18%);
-  --surface: color-mix(in oklab, var(--card) 92%, transparent);
-  --surface-strong: color-mix(in oklab, var(--card) 97%, white 3%);
-  --line: var(--border);
-  --inset-glint: rgba(255, 255, 255, 0.82);
-  --kicker: color-mix(in oklab, var(--primary) 72%, var(--foreground) 28%);
-  --bg-base: color-mix(in oklab, var(--background) 90%, var(--muted) 10%);
-  --header-bg: color-mix(in oklab, var(--background) 86%, transparent 14%);
-  --chip-bg: color-mix(in oklab, var(--card) 92%, var(--accent) 8%);
-  --chip-line: color-mix(in oklab, var(--primary) 16%, var(--border) 84%);
-  --link-bg-hover: color-mix(in oklab, var(--accent) 86%, white 14%);
-  --hero-a: color-mix(in oklab, var(--secondary) 34%, transparent);
-  --hero-b: color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
 .dark {
@@ -111,26 +102,6 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
-
-  --sea-ink: var(--foreground);
-  --sea-ink-soft: var(--muted-foreground);
-  --lagoon: color-mix(in oklab, var(--primary) 64%, var(--secondary) 36%);
-  --lagoon-deep: color-mix(in oklab, var(--primary) 86%, var(--foreground) 14%);
-  --palm: var(--lagoon);
-  --sand: color-mix(in oklab, var(--background) 92%, black 8%);
-  --foam: color-mix(in oklab, var(--card) 88%, black 12%);
-  --surface: color-mix(in oklab, var(--card) 88%, transparent);
-  --surface-strong: color-mix(in oklab, var(--card) 94%, black 6%);
-  --line: color-mix(in oklab, var(--border) 88%, white 12%);
-  --inset-glint: rgba(255, 255, 255, 0.06);
-  --kicker: color-mix(in oklab, var(--primary) 70%, var(--foreground) 30%);
-  --bg-base: color-mix(in oklab, var(--background) 92%, black 8%);
-  --header-bg: color-mix(in oklab, var(--background) 84%, transparent 16%);
-  --chip-bg: color-mix(in oklab, var(--card) 90%, var(--accent) 10%);
-  --chip-line: color-mix(in oklab, var(--primary) 22%, var(--border) 78%);
-  --link-bg-hover: color-mix(in oklab, var(--accent) 74%, black 26%);
-  --hero-a: color-mix(in oklab, var(--secondary) 24%, transparent);
-  --hero-b: color-mix(in oklab, var(--primary) 16%, transparent);
 }
 
 @theme inline {
@@ -172,6 +143,31 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+}
+
+.auth-light {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #1e847c;
+  --primary-foreground: #ffffff;
+  --secondary: #3fafa2;
+  --secondary-foreground: #ffffff;
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #ffffff;
+  --switch-background: #cbced4;
+  --ring: oklch(0.708 0 0);
 }
 
 html,
@@ -242,20 +238,24 @@ html {
 }
 
 a {
-  color: var(--lagoon-deep);
-  text-decoration-color: color-mix(in oklab, var(--lagoon-deep) 35%, transparent);
+  color: color-mix(in oklab, var(--primary) 82%, var(--foreground) 18%);
+  text-decoration-color: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--primary) 82%, var(--foreground) 18%) 35%,
+    transparent
+  );
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
 
 a:hover {
-  color: color-mix(in oklab, var(--lagoon-deep) 82%, black 18%);
+  color: var(--primary);
 }
 
 code {
   font-size: 0.9em;
-  border: 1px solid var(--line);
-  background: color-mix(in oklab, var(--surface-strong) 82%, white 18%);
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 86%, white 14%);
   border-radius: 7px;
   padding: 2px 7px;
 }
@@ -269,20 +269,15 @@ pre code {
   color: inherit;
 }
 
-.page-wrap {
-  width: min(1080px, calc(100% - 2rem));
-  margin-inline: auto;
-}
-
-.display-title {
-  font-family: var(--font-heading);
-}
-
 .island-shell {
-  border: 1px solid var(--line);
-  background: linear-gradient(165deg, var(--surface-strong), var(--surface));
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--card) 97%, white 3%),
+    color-mix(in oklab, var(--card) 90%, transparent)
+  );
   box-shadow:
-    0 1px 0 var(--inset-glint) inset,
+    0 1px 0 color-mix(in oklab, white 82%, transparent) inset,
     0 22px 44px color-mix(in oklab, var(--primary) 10%, transparent),
     0 6px 18px color-mix(in oklab, var(--foreground) 8%, transparent);
   backdrop-filter: blur(4px);
@@ -291,18 +286,18 @@ pre code {
 .feature-card {
   background: linear-gradient(
     165deg,
-    color-mix(in oklab, var(--surface-strong) 93%, white 7%),
-    var(--surface)
+    color-mix(in oklab, var(--card) 95%, white 5%),
+    color-mix(in oklab, var(--card) 88%, transparent)
   );
   box-shadow:
-    0 1px 0 var(--inset-glint) inset,
+    0 1px 0 color-mix(in oklab, white 82%, transparent) inset,
     0 18px 34px color-mix(in oklab, var(--primary) 10%, transparent),
     0 4px 14px color-mix(in oklab, var(--foreground) 6%, transparent);
 }
 
 .feature-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in oklab, var(--lagoon-deep) 35%, var(--line));
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
 }
 
 button,
@@ -320,62 +315,5 @@ a {
   text-transform: uppercase;
   font-weight: 700;
   font-size: 0.69rem;
-  color: var(--kicker);
-}
-
-.nav-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: var(--sea-ink-soft);
-}
-
-.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -6px;
-  width: 100%;
-  height: 2px;
-  transform: scaleX(0);
-  transform-origin: left;
-  background: linear-gradient(90deg, var(--lagoon), var(--lagoon-deep));
-  transition: transform 170ms ease;
-}
-
-.nav-link:hover,
-.nav-link.is-active {
-  color: var(--sea-ink);
-}
-
-.nav-link:hover::after,
-.nav-link.is-active::after {
-  transform: scaleX(1);
-}
-
-@media (max-width: 640px) {
-  .nav-link::after {
-    bottom: -4px;
-  }
-}
-
-.site-footer {
-  border-top: 1px solid var(--line);
-  background: color-mix(in oklab, var(--header-bg) 84%, transparent 16%);
-}
-
-.rise-in {
-  animation: rise-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  color: color-mix(in oklab, var(--primary) 72%, var(--foreground) 28%);
 }

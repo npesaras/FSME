@@ -47,11 +47,11 @@ function ChatStatusPanel({
 }) {
   return (
     <div className="flex h-full min-h-[680px] w-full items-center justify-center px-6 py-10 sm:px-10">
-      <div className="w-full max-w-2xl rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_18px_50px_rgba(22,74,60,0.08)] sm:p-8">
-        <h2 className="m-0 text-2xl font-semibold tracking-tight text-[var(--sea-ink)]">
+      <div className="w-full max-w-2xl rounded-[1.75rem] border border-border bg-card/90 p-6 shadow-sm backdrop-blur-[4px] sm:p-8">
+        <h2 className="m-0 text-2xl font-semibold tracking-tight text-foreground">
           {title}
         </h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--sea-ink-soft)] sm:text-base">
+        <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
           {description}
         </p>
         {children}
@@ -122,15 +122,15 @@ export default function CometChatWorkspacePanel({
         title="CometChat needs configuration"
         description="Add the missing Vite environment variables below in `frontend/.env`, then restart the frontend dev server."
       >
-        <div className="mt-5 rounded-2xl border border-dashed border-[var(--line)] bg-white/70 p-4">
-          <p className="m-0 text-xs font-semibold tracking-[0.18em] text-[var(--sea-ink-soft)] uppercase">
+        <div className="mt-5 rounded-2xl border border-dashed border-border bg-muted/30 p-4">
+          <p className="m-0 text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
             Missing keys
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {chatState.missingKeys.map((key) => (
               <code
                 key={key}
-                className="rounded-full bg-[var(--chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--sea-ink)]"
+                className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-foreground"
               >
                 {key}
               </code>
@@ -147,10 +147,10 @@ export default function CometChatWorkspacePanel({
         title="Chat workspace could not start"
         description="CometChat returned an initialization or login error for this role-specific workspace."
       >
-        <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm leading-7 text-red-700">
+        <div className="mt-5 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm leading-7 text-destructive">
           {chatState.message}
         </div>
-        <p className="mt-4 text-xs leading-6 text-[var(--sea-ink-soft)]">
+        <p className="mt-4 text-xs leading-6 text-muted-foreground">
           Check the browser console for the raw CometChat error object. The most common causes are
           a missing role UID, a UID that does not exist in your CometChat app, or an app ID /
           region / auth key mismatch.

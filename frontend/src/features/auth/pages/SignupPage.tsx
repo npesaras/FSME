@@ -3,6 +3,21 @@ import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail, User } from 'lucide-react'
 import AuthSplitLayout from '../components/AuthSplitLayout'
+import {
+  authAlertClassName,
+  authCompactCheckboxClassName,
+  authCompactCheckboxLabelClassName,
+  authCompactErrorTextClassName,
+  authCompactFieldLabelClassName,
+  authCompactInputClassName,
+  authCompactPrimaryButtonClassName,
+  authCompactTrailingIconClassName,
+  authDividerLineClassName,
+  authDividerTextClassName,
+  authIconButtonClassName,
+  authLinkClassName,
+  authSocialButtonClassName,
+} from '../components/authClassNames'
 import { AuthApiError, saveAuthSession, signUp } from '../api'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -49,7 +64,7 @@ export default function SignupPage() {
     >
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-1"
+        className={authSocialButtonClassName}
       >
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -73,10 +88,10 @@ export default function SignupPage() {
 
       <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200" />
+          <div className={authDividerLineClassName} />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <span className={authDividerTextClassName}>
             OR
           </span>
         </div>
@@ -92,7 +107,7 @@ export default function SignupPage() {
         className="space-y-4"
       >
         {submitError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div className={authAlertClassName}>
             {submitError}
           </div>
         ) : null}
@@ -118,10 +133,7 @@ export default function SignupPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authCompactFieldLabelClassName}>
                   Name
                 </label>
                 <div className="relative">
@@ -133,15 +145,15 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authCompactInputClassName}
                     placeholder="Enter your name"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <User className="h-[15px] w-[15px] text-slate-500" />
+                    <User className={authCompactTrailingIconClassName} />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
+                  <p className={authCompactErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -169,10 +181,7 @@ export default function SignupPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authCompactFieldLabelClassName}>
                   Email Address
                 </label>
                 <div className="relative">
@@ -184,15 +193,15 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authCompactInputClassName}
                     placeholder="Enter your email"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                    <Mail className="h-[15px] w-[15px] text-slate-500" />
+                    <Mail className={authCompactTrailingIconClassName} />
                   </div>
                 </div>
                 {error ? (
-                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
+                  <p className={authCompactErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -220,10 +229,7 @@ export default function SignupPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authCompactFieldLabelClassName}>
                   Password
                 </label>
                 <div className="relative">
@@ -235,23 +241,23 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authCompactInputClassName}
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    className={authIconButtonClassName}
                   >
                     {showPassword ? (
-                      <Eye className="h-[15px] w-[15px]" />
+                      <Eye className={authCompactTrailingIconClassName} />
                     ) : (
-                      <EyeOff className="h-[15px] w-[15px]" />
+                      <EyeOff className={authCompactTrailingIconClassName} />
                     )}
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
+                  <p className={authCompactErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -280,10 +286,7 @@ export default function SignupPage() {
 
             return (
               <div className="space-y-1.5">
-                <label
-                  htmlFor={field.name}
-                  className="text-[13px] font-semibold text-slate-900"
-                >
+                <label htmlFor={field.name} className={authCompactFieldLabelClassName}>
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -295,23 +298,23 @@ export default function SignupPage() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 pr-10 text-sm text-slate-900 placeholder:text-slate-500 focus:border-[#1E847C] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/20"
+                    className={authCompactInputClassName}
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-700 focus:outline-none"
+                    className={authIconButtonClassName}
                   >
                     {showConfirmPassword ? (
-                      <Eye className="h-[15px] w-[15px]" />
+                      <Eye className={authCompactTrailingIconClassName} />
                     ) : (
-                      <EyeOff className="h-[15px] w-[15px]" />
+                      <EyeOff className={authCompactTrailingIconClassName} />
                     )}
                   </button>
                 </div>
                 {error ? (
-                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
+                  <p className={authCompactErrorTextClassName}>{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -334,7 +337,7 @@ export default function SignupPage() {
             const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
 
             return (
-              <div className="space-y-1.5 pb-1 pt-1">
+              <div className="pb-1 pt-1">
                 <div className="flex items-center gap-2">
                   <input
                     id={field.name}
@@ -343,20 +346,20 @@ export default function SignupPage() {
                     checked={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.checked)}
-                    className="h-3.5 w-3.5 rounded border-slate-300 text-[#1E847C] accent-[#1E847C] focus:ring-[#1E847C]"
+                    className={authCompactCheckboxClassName}
                   />
                   <label
                     htmlFor={field.name}
-                    className="cursor-pointer select-none text-[13px] font-medium text-slate-700"
+                    className={authCompactCheckboxLabelClassName}
                   >
                     I Agree to{' '}
-                    <span className="cursor-pointer font-semibold text-[#156a63] hover:underline">
+                    <span className="cursor-pointer font-medium text-primary hover:underline">
                       Terms &amp; Privacy
                     </span>
                   </label>
                 </div>
                 {error ? (
-                  <p className="text-[13px] font-medium text-red-600">{String(error)}</p>
+                  <p className="mt-1.5 text-[13px] font-medium text-destructive">{String(error)}</p>
                 ) : null}
               </div>
             )
@@ -370,7 +373,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={!canSubmit || isSubmitting}
-              className="mt-2 w-full rounded-lg bg-[#1E847C] px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-[#156a63] focus:outline-none focus:ring-2 focus:ring-[#1E847C]/50 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+              className={authCompactPrimaryButtonClassName}
             >
               {isSubmitting ? 'Signing Up...' : 'Sign Up'}
             </button>
@@ -379,10 +382,10 @@ export default function SignupPage() {
       </form>
 
       <div className="mt-6 text-center text-[13px]">
-        <span className="text-slate-600">Already have an account? </span>
+        <span className="text-muted-foreground">Already have an account? </span>
         <Link
           to="/sign-in"
-          className="font-semibold text-[#156a63] hover:text-[#0d4f4f] hover:underline"
+          className={authLinkClassName}
         >
           Sign In
         </Link>

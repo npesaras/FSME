@@ -26,11 +26,11 @@ function ChatStatusPanel({
 }) {
   return (
     <div className="flex h-full min-h-[680px] w-full items-center justify-center px-6 py-10 sm:px-10">
-      <div className="w-full max-w-2xl rounded-[1.75rem] border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_18px_50px_rgba(22,74,60,0.08)] sm:p-8">
-        <h2 className="m-0 text-2xl font-semibold tracking-tight text-[var(--sea-ink)]">
+      <div className="w-full max-w-2xl rounded-[1.75rem] border border-border bg-card/90 p-6 shadow-sm backdrop-blur-[4px] sm:p-8">
+        <h2 className="m-0 text-2xl font-semibold tracking-tight text-foreground">
           {title}
         </h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--sea-ink-soft)] sm:text-base">
+        <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
           {description}
         </p>
       </div>
@@ -54,7 +54,7 @@ export default function SharedChatWorkspacePage({
       description={description}
       links={links}
     >
-      <section className="mt-8 overflow-hidden rounded-[2rem] border border-[var(--line)] bg-[var(--surface-strong)] shadow-[0_24px_70px_rgba(20,64,53,0.1)]">
+      <section className="mt-8 overflow-hidden rounded-[2rem] border border-border bg-card/80 shadow-sm backdrop-blur-[4px]">
         <ClientOnly
           fallback={
             <ChatStatusPanel

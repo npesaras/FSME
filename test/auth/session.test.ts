@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCurrentAccountServerFn } from './session.functions'
+import { getCurrentAccountServerFn } from '../../src/features/auth/session.functions'
 import {
   getDefaultAuthenticatedPath,
   redirectAuthenticatedToRoleDashboard,
   requireAuthenticatedRole,
-} from './session'
+} from '../../src/features/auth/session'
 
-vi.mock('./session.functions', () => ({
+vi.mock('../../src/features/auth/session.functions', () => ({
   getCurrentAccountServerFn: vi.fn(),
 }))
 

@@ -25,6 +25,16 @@ This project uses [Vitest](https://vitest.dev/) for testing. You can run the tes
 npm run test
 ```
 
+For watch mode while developing:
+
+```bash
+npm run test:watch
+```
+
+Server-side tests use the default Node environment. For component tests, add `// @vitest-environment jsdom` at the top of the test file.
+
+All tests live in the root `test/` folder. Use folders such as `test/auth/`, `test/unit/`, and `test/integration/` to group coverage by purpose.
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.

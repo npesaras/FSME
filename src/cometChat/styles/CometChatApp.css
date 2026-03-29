@@ -22,6 +22,12 @@
     0px 2px 4px -2px rgba(16, 24, 40, 0.06);
 }
 
+.faculty-chat-shell .cometchat-root {
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+}
+
 .conversations-wrapper {
   display: flex;
   width: 30%;

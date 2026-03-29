@@ -147,7 +147,7 @@ function FacultyChatWorkspace() {
   }
 
   return (
-    <div className="faculty-panel h-[calc(100vh-4rem)] w-full overflow-hidden rounded-[1.5rem] bg-card shadow-sm">
+    <div className="faculty-chat-shell h-[calc(100vh-4rem)] w-full overflow-hidden">
       <CometChatProvider authBuilderSetting={facultyChatSettings}>
         <CometChatApp
           user={chatState.panelist}

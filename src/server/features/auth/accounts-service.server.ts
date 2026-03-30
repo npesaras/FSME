@@ -19,6 +19,7 @@ type AccountsServiceDependencies = {
   users: {
     list: (options: { queries?: string[] }) => Promise<{ users: AppwriteUser[] }>
     get: (options: { userId: string }) => Promise<AppwriteUser>
+    delete: (options: { userId: string }) => Promise<unknown>
     updateStatus: (options: { userId: string; status: boolean }) => Promise<AppwriteUser>
     updateLabels: (options: { userId: string; labels: string[] }) => Promise<AppwriteUser>
     updatePrefs: (options: {
@@ -73,6 +74,11 @@ type AccountsServiceDependencies = {
       data: Record<string, unknown>
       permissions?: string[]
     }) => Promise<Row>
+    deleteRow: (options: {
+      databaseId: string
+      tableId: string
+      rowId: string
+    }) => Promise<unknown>
   }
   databaseId: string
   userProfilesTableId: string
@@ -459,6 +465,25 @@ export function createAccountsService({
     }
   }
 
+  async function deleteMirroredProfile(userId: string) {
+    try {
+      await userProfiles.deleteByUserId(userId)
+    } catch (error) {
+      if (error instanceof AppError && error.code === 'USER_PROFILES_TABLE_MISSING') {
+        logger?.warn?.(
+          {
+            tableId: userProfilesTableId,
+            userId,
+          },
+          'User profiles table missing during account deletion. Continuing with Appwrite user deletion.'
+        )
+        return
+      }
+
+      throw error
+    }
+  }
+
   return {
     async signUp({
       name,
@@ -701,6 +726,36 @@ export function createAccountsService({
 
       return {
         message: 'Signed out successfully.',
+      }
+    },
+
+    async deleteCurrentAccount(sessionSecret: string): Promise<AuthMessageResponse> {
+      const { user } = await getAccountBySessionSecret(sessionSecret)
+
+      await deleteMirroredProfile(user.$id)
+
+      try {
+        await users.delete({
+          userId: user.$id,
+        })
+      } catch (error) {
+        if (isAppwriteErrorWithCode(error, 404)) {
+          return {
+            message: 'Your account has been deleted successfully.',
+          }
+        }
+
+        if (isAppwriteRateLimitError(error)) {
+          throw new AppError(429, 'Please wait a moment before trying again.', {
+            code: 'RATE_LIMITED',
+          })
+        }
+
+        throw error
+      }
+
+      return {
+        message: 'Your account has been deleted successfully.',
       }
     },
 

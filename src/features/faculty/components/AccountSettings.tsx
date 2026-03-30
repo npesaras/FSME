@@ -1,5 +1,20 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState } from 'react'
+import { useNavigate, useRouter } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
+
+import { deleteAccount } from '../../auth/api'
+import type { AuthAccount } from '../../auth/types'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../../../components/ui/alert-dialog'
+import { Button } from '../../../components/ui/button'
 
 const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
   <button
@@ -11,11 +26,79 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void 
   >
     <span className={`${checked ? 'translate-x-[22px]' : 'translate-x-[2px]'} inline-block h-[20px] w-[20px] transform rounded-full bg-background transition-transform shadow-sm`} />
   </button>
-);
+)
 
-export const AccountSettings = () => {
-  const [twoStep, setTwoStep] = useState(true);
-  const [supportAccess, setSupportAccess] = useState(true);
+function getNameParts(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+
+  if (parts.length === 0) {
+    return {
+      firstName: '',
+      lastName: '',
+    }
+  }
+
+  if (parts.length === 1) {
+    return {
+      firstName: parts[0] ?? '',
+      lastName: '',
+    }
+  }
+
+  return {
+    firstName: parts.slice(0, -1).join(' '),
+    lastName: parts.at(-1) ?? '',
+  }
+}
+
+interface AccountSettingsProps {
+  account: AuthAccount
+}
+
+export const AccountSettings = ({ account }: AccountSettingsProps) => {
+  const navigate = useNavigate()
+  const router = useRouter()
+  const [twoStep, setTwoStep] = useState(true)
+  const [supportAccess, setSupportAccess] = useState(true)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const { firstName, lastName } = getNameParts(account.name)
+
+  const handleDeleteDialogOpenChange = (nextOpen: boolean) => {
+    if (isDeletingAccount) {
+      return
+    }
+
+    setDeleteError(null)
+    setIsDeleteDialogOpen(nextOpen)
+  }
+
+  const handleDeleteAccount = async () => {
+    if (isDeletingAccount) {
+      return
+    }
+
+    setIsDeletingAccount(true)
+    setDeleteError(null)
+
+    try {
+      await deleteAccount()
+      setIsDeleteDialogOpen(false)
+      await router.invalidate()
+      await navigate({
+        to: '/sign-in',
+        replace: true,
+      })
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : 'We could not delete your account right now. Please try again.'
+      )
+      setIsDeletingAccount(false)
+    }
+  }
 
   return (
     <div className="faculty-panel animate-in fade-in flex-1 w-full rounded-lg p-8 duration-500 md:p-12">
@@ -48,7 +131,7 @@ export const AccountSettings = () => {
             <label className="text-[14px] font-bold text-foreground">First Name</label>
             <input
               type="text"
-              defaultValue="Brian"
+              defaultValue={firstName}
               className="faculty-input w-full rounded-md px-3 py-2.5 text-[14px]"
             />
           </div>
@@ -56,7 +139,7 @@ export const AccountSettings = () => {
             <label className="text-[14px] font-bold text-foreground">Last Name</label>
             <input
               type="text"
-              defaultValue="Frederin"
+              defaultValue={lastName}
               className="faculty-input w-full rounded-md px-3 py-2.5 text-[14px]"
             />
           </div>
@@ -73,7 +156,7 @@ export const AccountSettings = () => {
               <label className="text-[14px] font-bold text-foreground">Email</label>
               <input
                 type="text"
-                defaultValue="brianfrederin@email.com"
+                defaultValue={account.email}
                 disabled
                 className="w-full cursor-not-allowed rounded-md border border-border/60 bg-accent/35 px-3 py-2.5 text-[14px] text-muted-foreground outline-none"
               />
@@ -121,26 +204,54 @@ export const AccountSettings = () => {
           <Toggle checked={supportAccess} onChange={() => setSupportAccess(!supportAccess)} />
         </div>
 
-        <div className="flex items-center justify-between py-2 mb-6 mt-4">
-          <div className="pr-4">
-            <h3 className="mb-1 text-[15px] font-bold text-foreground">Log out of all devices</h3>
-            <p className="text-[13px] text-muted-foreground">Log out of all other active sessions on other devices besides this one.</p>
-          </div>
-          <button className="faculty-button-muted whitespace-nowrap rounded-md px-4 py-2.5 text-[13px] font-semibold transition-colors">
-            Log out
-          </button>
-        </div>
-
         <div className="flex items-center justify-between py-2 mt-4">
           <div className="pr-4">
             <h3 className="mb-1 text-[15px] font-bold text-destructive">Delete my account</h3>
             <p className="text-[13px] text-muted-foreground">Permanently delete the account and remove access from all workspaces.</p>
           </div>
-          <button className="faculty-button-muted whitespace-nowrap rounded-md px-4 py-2.5 text-[13px] font-semibold transition-colors">
-            Delete Account
-          </button>
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={handleDeleteDialogOpenChange}>
+            <AlertDialogTrigger asChild>
+              <button className="faculty-button-muted whitespace-nowrap rounded-md px-4 py-2.5 text-[13px] font-semibold transition-colors">
+                Delete Account
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This permanently deletes your Appwrite account, removes your mirrored workspace profile,
+                  and signs you out on this browser. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+
+              <div className="rounded-lg border border-border/70 bg-accent/20 px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">{account.email}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {account.name} will lose access to all FSMES workspaces immediately.
+                </p>
+              </div>
+
+              {deleteError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {deleteError}
+                </p>
+              ) : null}
+
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeletingAccount}>Cancel</AlertDialogCancel>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isDeletingAccount}
+                  onClick={handleDeleteAccount}
+                >
+                  {isDeletingAccount ? 'Deleting account...' : 'Delete account'}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

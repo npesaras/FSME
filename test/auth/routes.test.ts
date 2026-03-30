@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AuthRuntime } from '../../src/server/features/auth/runtime.server'
 import {
+  handleDeleteAccountRequest,
   handleForgotPasswordRequest,
   handleHealthRequest,
   handleSignInRequest,
@@ -24,6 +25,7 @@ function createRuntime(overrides: Partial<AuthRuntime['accounts']>) {
       completeEmailVerification: vi.fn(),
       getCurrentAccount: vi.fn(),
       signOut: vi.fn(),
+      deleteCurrentAccount: vi.fn(),
       forgotPassword: vi.fn(),
       resetPassword: vi.fn(),
       getById: vi.fn(),
@@ -169,6 +171,31 @@ describe('auth route handlers', () => {
     expect(response.status).toBe(200)
     await expect(response.json()).resolves.toMatchObject({
       message: 'Email verified successfully. You can now sign in.',
+    })
+  })
+
+  it('deletes the authenticated account and clears the session cookie', async () => {
+    const runtime = createRuntime({
+      deleteCurrentAccount: vi.fn().mockResolvedValue({
+        message: 'Your account has been deleted successfully.',
+      }),
+    })
+
+    const response = await handleDeleteAccountRequest(
+      new Request('http://localhost:3000/api/v1/auth/delete-account', {
+        method: 'POST',
+        headers: {
+          cookie: 'fsme_session=active-session-secret',
+        },
+      }),
+      runtime,
+    )
+
+    expect(response.status).toBe(200)
+    expect(runtime.accounts.deleteCurrentAccount).toHaveBeenCalledWith('active-session-secret')
+    expect(response.headers.get('set-cookie')).toContain('fsme_session=')
+    await expect(response.json()).resolves.toMatchObject({
+      message: 'Your account has been deleted successfully.',
     })
   })
 })

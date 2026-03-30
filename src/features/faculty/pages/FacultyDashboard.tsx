@@ -108,7 +108,7 @@ export default function FacultyDashboard({
               </p>
             </div>
           </div>
-          <AccountSettings />
+          <AccountSettings account={account} />
         </div>
       )}
     </div>

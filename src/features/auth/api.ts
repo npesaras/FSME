@@ -191,3 +191,9 @@ export function signOut() {
     method: 'POST',
   })
 }
+
+export function deleteAccount() {
+  return sendAuthRequest<AuthMessageResponse>('/api/v1/auth/delete-account', {
+    method: 'POST',
+  })
+}

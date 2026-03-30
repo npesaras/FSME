@@ -34,6 +34,7 @@ function createTestService() {
   const users = {
     list: vi.fn(),
     get: vi.fn(),
+    delete: vi.fn(),
     updateStatus: vi.fn(),
     updateLabels: vi.fn(),
     updatePrefs: vi.fn(),
@@ -56,6 +57,7 @@ function createTestService() {
     listRows: vi.fn(),
     createRow: vi.fn(),
     updateRow: vi.fn(),
+    deleteRow: vi.fn(),
   }
 
   const service = createAccountsService({
@@ -222,6 +224,38 @@ describe('accounts service verification flow', () => {
 
     expect(sessionAccount.deleteSession).toHaveBeenCalledWith({
       sessionId: 'current',
+    })
+  })
+
+  it('deletes the current account and mirrored user profile', async () => {
+    const { service, sessionAccount, tablesDB, users } = createTestService()
+
+    sessionAccount.get.mockResolvedValue(createUser())
+    tablesDB.listRows.mockResolvedValue({
+      rows: [
+        {
+          $id: 'profile-1',
+          user_id: 'user-1',
+          full_name: 'Faculty User',
+          role: 'faculty',
+        },
+      ],
+      total: 1,
+    })
+    tablesDB.deleteRow.mockResolvedValue({})
+    users.delete.mockResolvedValue({})
+
+    await expect(service.deleteCurrentAccount('active-session-secret')).resolves.toMatchObject({
+      message: 'Your account has been deleted successfully.',
+    })
+
+    expect(tablesDB.deleteRow).toHaveBeenCalledWith({
+      databaseId: 'main',
+      tableId: 'user_profiles',
+      rowId: 'profile-1',
+    })
+    expect(users.delete).toHaveBeenCalledWith({
+      userId: 'user-1',
     })
   })
 })

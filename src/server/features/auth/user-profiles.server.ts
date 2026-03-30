@@ -35,6 +35,11 @@ type UserProfilesRepositoryOptions = {
       data: Record<string, unknown>
       permissions?: string[]
     }) => Promise<Row>
+    deleteRow: (options: {
+      databaseId: string
+      tableId: string
+      rowId: string
+    }) => Promise<unknown>
   }
   databaseId: string
   tableId: string
@@ -135,6 +140,31 @@ export function createUserProfilesRepository({
           role,
         },
       })
+    },
+
+    async deleteByUserId(userId: string) {
+      const existing = await findByUserId(userId)
+
+      if (!existing) {
+        return false
+      }
+
+      try {
+        await tablesDB.deleteRow({
+          databaseId,
+          tableId,
+          rowId: existing.$id,
+        })
+      } catch (error) {
+        if (isMissingTableError(error)) {
+          logger?.warn?.({ tableId }, 'User profiles table was not found while deleting auth profile data.')
+          throw createTableMissingError()
+        }
+
+        throw error
+      }
+
+      return true
     },
   }
 }

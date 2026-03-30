@@ -207,6 +207,41 @@ export async function handleSignOutRequest(
   }
 }
 
+export async function handleDeleteAccountRequest(
+  request: Request,
+  runtime: AuthRuntime = authRuntime
+) {
+  const sessionSecret = getSessionSecretFromRequest(request)
+
+  if (!sessionSecret) {
+    return errorResponse(createUnauthorizedError(), {
+      headers: createResponseHeaders({
+        'set-cookie': createClearedSessionCookieHeader(),
+      }),
+    })
+  }
+
+  try {
+    const response = await runtime.accounts.deleteCurrentAccount(sessionSecret)
+
+    return jsonResponse(response, {
+      headers: createResponseHeaders({
+        'set-cookie': createClearedSessionCookieHeader(),
+      }),
+    })
+  } catch (error) {
+    if (error instanceof AppError && error.statusCode === 401) {
+      return errorResponse(error, {
+        headers: createResponseHeaders({
+          'set-cookie': createClearedSessionCookieHeader(),
+        }),
+      })
+    }
+
+    return errorResponse(error)
+  }
+}
+
 export async function handleForgotPasswordRequest(
   request: Request,
   runtime: AuthRuntime = authRuntime

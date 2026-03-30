@@ -104,6 +104,48 @@ describe('auth route handlers', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('set-cookie')).toContain('fsme_session=')
+    expect(response.headers.get('set-cookie')).toContain('Expires=')
+  })
+
+  it('keeps the auth cookie session-only when remember me is not checked', async () => {
+    const runtime = createRuntime({
+      signIn: vi.fn().mockResolvedValue({
+        account: {
+          id: 'user-1',
+          name: 'Faculty User',
+          email: 'faculty@example.com',
+          role: 'faculty',
+          status: 'active',
+          lastSignInAt: null,
+          emailVerified: true,
+          createdAt: '2099-03-30T00:00:00.000Z',
+          updatedAt: '2099-03-30T00:00:00.000Z',
+        },
+        session: {
+          secret: 'session-only-secret',
+          expire: '2099-03-31T00:00:00.000Z',
+        },
+      }),
+    })
+
+    const response = await handleSignInRequest(
+      new Request('http://localhost:3000/api/v1/auth/sign-in', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'faculty@example.com',
+          password: 'secure-password',
+          remember: false,
+        }),
+      }),
+      runtime,
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('set-cookie')).toContain('fsme_session=')
+    expect(response.headers.get('set-cookie')).not.toContain('Expires=')
   })
 
   it('derives forgot-password origin from the request URL', async () => {

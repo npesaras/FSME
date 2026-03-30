@@ -128,7 +128,7 @@ export async function handleSignInRequest(request: Request, runtime: AuthRuntime
       {
         headers: createResponseHeaders({
           'set-cookie': createSessionCookieHeader(session.secret, {
-            rememberSession: payload.remember !== false,
+            rememberSession: payload.remember === true,
             expiresAt: session.expire,
           }),
         }),

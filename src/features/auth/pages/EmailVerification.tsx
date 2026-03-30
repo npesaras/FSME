@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, getRouteApi, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, LoaderCircle, MailCheck, ShieldAlert } from 'lucide-react'
-import { AuthApiError, checkEmailStatus, verifyEmail } from '../api'
+import { AuthApiError, verifyEmail } from '../api'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
   authBodyTextClassName,
@@ -13,7 +13,6 @@ const verifyEmailRoute = getRouteApi('/(public)/verify-email')
 const redirectDelaySeconds = 5
 
 type VerificationViewState = 'pending' | 'verifying' | 'success' | 'error'
-type AppwriteVerificationStatus = 'idle' | 'checking' | 'verified' | 'unverified' | 'missing'
 
 export default function EmailVerificationPage() {
   const navigate = useNavigate()
@@ -24,7 +23,6 @@ export default function EmailVerificationPage() {
     hasVerificationLink ? 'verifying' : 'pending'
   )
   const [detailMessage, setDetailMessage] = useState<string | null>(null)
-  const [appwriteStatus, setAppwriteStatus] = useState<AppwriteVerificationStatus>('idle')
 
   useEffect(() => {
     if (!hasVerificationLink) {
@@ -34,6 +32,10 @@ export default function EmailVerificationPage() {
     let cancelled = false
 
     void (async () => {
+      if (!userId || !secret) {
+        return
+      }
+
       try {
         const response = await verifyEmail({
           userId,
@@ -66,45 +68,6 @@ export default function EmailVerificationPage() {
   }, [hasVerificationLink, secret, userId])
 
   useEffect(() => {
-    if (hasVerificationLink || !email) {
-      return
-    }
-
-    let cancelled = false
-
-    setAppwriteStatus('checking')
-
-    void (async () => {
-      try {
-        const response = await checkEmailStatus({
-          email,
-        })
-
-        if (cancelled) {
-          return
-        }
-
-        if (response.verificationStatus === 'verified') {
-          setAppwriteStatus('verified')
-          setDetailMessage('This Appwrite account is already verified. You can sign in now.')
-          setStatus('success')
-          return
-        }
-
-        setAppwriteStatus(response.verificationStatus)
-      } catch {
-        if (!cancelled) {
-          setAppwriteStatus('idle')
-        }
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [email, hasVerificationLink])
-
-  useEffect(() => {
     if (status === 'verifying') {
       return
     }
@@ -129,7 +92,6 @@ export default function EmailVerificationPage() {
   }, [navigate, status])
 
   const content = getVerificationContent({
-    appwriteStatus,
     detailMessage,
     email,
     status,
@@ -169,14 +131,12 @@ export default function EmailVerificationPage() {
 }
 
 function getVerificationContent({
-  appwriteStatus,
   detailMessage,
   email,
   status,
 }: {
-  appwriteStatus: AppwriteVerificationStatus
   detailMessage: string | null
-  email: string
+  email?: string
   status: VerificationViewState
 }) {
   if (status === 'verifying') {
@@ -223,10 +183,7 @@ function getVerificationContent({
   return {
     title: 'Check Your Email',
     subtitle: 'We created your account. Verify your email to continue.',
-    body: getPendingVerificationBody({
-      appwriteStatus,
-      email,
-    }),
+    body: getPendingVerificationBody(email),
     Icon: MailCheck,
     iconWrapperClassName:
       'mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/12 text-primary',
@@ -235,36 +192,8 @@ function getVerificationContent({
   }
 }
 
-function getPendingVerificationBody({
-  appwriteStatus,
-  email,
-}: {
-  appwriteStatus: AppwriteVerificationStatus
-  email: string
-}) {
-  const emailText = email ? ` for ${email}` : ''
-
-  if (appwriteStatus === 'checking') {
-    return `Checking your Appwrite verification status${emailText}.`
-  }
-
-  if (appwriteStatus === 'verified') {
-    return 'This Appwrite account is already verified. You can sign in now.'
-  }
-
-  if (appwriteStatus === 'unverified') {
-    return email
-      ? `Your account is not yet verified. The Appwrite account for ${email} is still marked as Unverified.`
-      : 'Your account is not yet verified.'
-  }
-
-  if (appwriteStatus === 'missing') {
-    return email
-      ? `We could not find an Appwrite account for ${email} yet. If you just signed up, wait a moment and then try again.`
-      : 'We could not find your Appwrite account yet. If you just signed up, wait a moment and then try again.'
-  }
-
+function getPendingVerificationBody(email?: string) {
   return email
-    ? `We sent a verification email to ${email}. Open that message, use the Appwrite link, and then sign in once verification is complete.`
-    : 'We sent a verification email to your inbox. Open that message, use the Appwrite link, and then sign in once verification is complete.'
+    ? `We sent a verification email to ${email}. Open that message, use the verification link, and then sign in. If you already verified this address, you can sign in now.`
+    : 'We sent a verification email to your inbox. Open that message, use the verification link, and then sign in.'
 }

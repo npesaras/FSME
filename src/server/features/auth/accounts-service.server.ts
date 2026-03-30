@@ -204,10 +204,18 @@ export function createAccountsService({
     logger,
   })
   const allowedRecoveryOrigins = new Set(
-    recoveryOrigins.map((origin) => normalizeOrigin(origin)).filter(Boolean)
+    recoveryOrigins.flatMap((origin) => {
+      const normalizedOrigin = normalizeOrigin(origin)
+
+      return normalizedOrigin ? [normalizedOrigin] : []
+    })
   )
   const allowedVerificationOrigins = new Set(
-    verificationOrigins.map((origin) => normalizeOrigin(origin)).filter(Boolean)
+    verificationOrigins.flatMap((origin) => {
+      const normalizedOrigin = normalizeOrigin(origin)
+
+      return normalizedOrigin ? [normalizedOrigin] : []
+    })
   )
 
   function assertAllowedOrigin({
@@ -368,18 +376,7 @@ export function createAccountsService({
     origin: string
   }) {
     const normalizedEmail = normalizeEmail(email)
-    const existingUser = await findAuthUserByEmail(normalizedEmail)
     let session
-
-    if (!existingUser) {
-      throw new AppError(
-        404,
-        'Your account does not exist. Please sign up if you do not have an account yet.',
-        {
-          code: 'ACCOUNT_NOT_FOUND',
-        }
-      )
-    }
 
     try {
       const account = createAdminAccount()
@@ -463,19 +460,6 @@ export function createAccountsService({
   }
 
   return {
-    async checkEmailStatus({ email }: { email: string }) {
-      const user = await findAuthUserByEmail(normalizeEmail(email))
-
-      return {
-        exists: Boolean(user),
-        verificationStatus: user
-          ? user.emailVerification
-            ? 'verified'
-            : 'unverified'
-          : 'missing',
-      }
-    },
-
     async signUp({
       name,
       email,

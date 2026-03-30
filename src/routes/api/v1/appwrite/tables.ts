@@ -4,7 +4,7 @@ import { handleAppwriteTablesRequest } from '#/server/features/auth/routes.serve
 export const Route = createFileRoute('/api/v1/appwrite/tables')({
   server: {
     handlers: {
-      GET: () => handleAppwriteTablesRequest(),
+      GET: ({ request }) => handleAppwriteTablesRequest(request),
     },
   },
 })

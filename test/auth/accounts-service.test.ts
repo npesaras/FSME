@@ -123,9 +123,8 @@ describe('accounts service verification flow', () => {
   })
 
   it('blocks sign-in for unverified users and resends verification', async () => {
-    const { adminAccount, service, sessionAccount, tablesDB, users } = createTestService()
+    const { adminAccount, service, sessionAccount, tablesDB } = createTestService()
 
-    users.list.mockResolvedValue({ users: [createUser({ emailVerification: false })] })
     adminAccount.createEmailPasswordSession.mockResolvedValue({
       secret: 'temp-session-secret',
       expire: '2026-03-31T00:00:00.000Z',
@@ -154,10 +153,13 @@ describe('accounts service verification flow', () => {
     expect(tablesDB.createRow).not.toHaveBeenCalled()
   })
 
-  it('returns account-not-found when the email does not exist', async () => {
-    const { service, users } = createTestService()
+  it('returns invalid-credentials when the email does not exist', async () => {
+    const { adminAccount, service, users } = createTestService()
 
-    users.list.mockResolvedValue({ users: [] })
+    adminAccount.createEmailPasswordSession.mockRejectedValue({
+      code: 401,
+      type: 'user_invalid_credentials',
+    })
 
     await expect(
       service.signIn({
@@ -166,9 +168,11 @@ describe('accounts service verification flow', () => {
         origin: 'http://localhost:3000',
       }),
     ).rejects.toMatchObject({
-      code: 'ACCOUNT_NOT_FOUND',
-      statusCode: 404,
+      code: 'INVALID_CREDENTIALS',
+      statusCode: 401,
     })
+
+    expect(users.list).not.toHaveBeenCalled()
   })
 
   it('completes email verification and creates the verified user profile row', async () => {

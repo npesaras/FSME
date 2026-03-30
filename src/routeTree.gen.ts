@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PanelistRouteRouteImport } from './routes/panelist/route'
 import { Route as FacultyRouteRouteImport } from './routes/faculty/route'
 import { Route as PanelistIndexRouteImport } from './routes/panelist/index'
 import { Route as FacultyIndexRouteImport } from './routes/faculty/index'
@@ -34,19 +35,23 @@ import { Route as ApiV1AuthSignInRouteImport } from './routes/api/v1/auth/sign-i
 import { Route as ApiV1AuthResetPasswordRouteImport } from './routes/api/v1/auth/reset-password'
 import { Route as ApiV1AuthMeRouteImport } from './routes/api/v1/auth/me'
 import { Route as ApiV1AuthForgotPasswordRouteImport } from './routes/api/v1/auth/forgot-password'
-import { Route as ApiV1AuthEmailStatusRouteImport } from './routes/api/v1/auth/email-status'
 import { Route as ApiV1AppwriteTablesRouteImport } from './routes/api/v1/appwrite/tables'
 import { Route as ApiV1AppwriteHealthRouteImport } from './routes/api/v1/appwrite/health'
 
+const PanelistRouteRoute = PanelistRouteRouteImport.update({
+  id: '/panelist',
+  path: '/panelist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FacultyRouteRoute = FacultyRouteRouteImport.update({
   id: '/faculty',
   path: '/faculty',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanelistIndexRoute = PanelistIndexRouteImport.update({
-  id: '/panelist/',
-  path: '/panelist/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => PanelistRouteRoute,
 } as any)
 const FacultyIndexRoute = FacultyIndexRouteImport.update({
   id: '/',
@@ -59,19 +64,19 @@ const publicIndexRoute = publicIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanelistReviewsRoute = PanelistReviewsRouteImport.update({
-  id: '/panelist/reviews',
-  path: '/panelist/reviews',
-  getParentRoute: () => rootRouteImport,
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => PanelistRouteRoute,
 } as any)
 const PanelistDecisionsRoute = PanelistDecisionsRouteImport.update({
-  id: '/panelist/decisions',
-  path: '/panelist/decisions',
-  getParentRoute: () => rootRouteImport,
+  id: '/decisions',
+  path: '/decisions',
+  getParentRoute: () => PanelistRouteRoute,
 } as any)
 const PanelistChatRoute = PanelistChatRouteImport.update({
-  id: '/panelist/chat',
-  path: '/panelist/chat',
-  getParentRoute: () => rootRouteImport,
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => PanelistRouteRoute,
 } as any)
 const FacultyDocumentsRoute = FacultyDocumentsRouteImport.update({
   id: '/documents',
@@ -163,11 +168,6 @@ const ApiV1AuthForgotPasswordRoute = ApiV1AuthForgotPasswordRouteImport.update({
   path: '/api/v1/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiV1AuthEmailStatusRoute = ApiV1AuthEmailStatusRouteImport.update({
-  id: '/api/v1/auth/email-status',
-  path: '/api/v1/auth/email-status',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiV1AppwriteTablesRoute = ApiV1AppwriteTablesRouteImport.update({
   id: '/api/v1/appwrite/tables',
   path: '/api/v1/appwrite/tables',
@@ -181,6 +181,7 @@ const ApiV1AppwriteHealthRoute = ApiV1AppwriteHealthRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/faculty': typeof FacultyRouteRouteWithChildren
+  '/panelist': typeof PanelistRouteRouteWithChildren
   '/forgot-password': typeof publicForgotPasswordRoute
   '/home': typeof publicHomeRoute
   '/reset-password': typeof publicResetPasswordRoute
@@ -200,7 +201,6 @@ export interface FileRoutesByFullPath {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
-  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -229,7 +229,6 @@ export interface FileRoutesByTo {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
-  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -241,6 +240,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/faculty': typeof FacultyRouteRouteWithChildren
+  '/panelist': typeof PanelistRouteRouteWithChildren
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/home': typeof publicHomeRoute
   '/(public)/reset-password': typeof publicResetPasswordRoute
@@ -260,7 +260,6 @@ export interface FileRoutesById {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
-  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -273,6 +272,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/faculty'
+    | '/panelist'
     | '/forgot-password'
     | '/home'
     | '/reset-password'
@@ -292,7 +292,6 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
-    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -321,7 +320,6 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
-    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -332,6 +330,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/faculty'
+    | '/panelist'
     | '/(public)/forgot-password'
     | '/(public)/home'
     | '/(public)/reset-password'
@@ -351,7 +350,6 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
-    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -363,6 +361,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   FacultyRouteRoute: typeof FacultyRouteRouteWithChildren
+  PanelistRouteRoute: typeof PanelistRouteRouteWithChildren
   publicForgotPasswordRoute: typeof publicForgotPasswordRoute
   publicHomeRoute: typeof publicHomeRoute
   publicResetPasswordRoute: typeof publicResetPasswordRoute
@@ -370,15 +369,10 @@ export interface RootRouteChildren {
   publicSignInRoute: typeof publicSignInRoute
   publicSignupRoute: typeof publicSignupRoute
   publicVerifyEmailRoute: typeof publicVerifyEmailRoute
-  PanelistChatRoute: typeof PanelistChatRoute
-  PanelistDecisionsRoute: typeof PanelistDecisionsRoute
-  PanelistReviewsRoute: typeof PanelistReviewsRoute
   publicIndexRoute: typeof publicIndexRoute
-  PanelistIndexRoute: typeof PanelistIndexRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1AppwriteHealthRoute: typeof ApiV1AppwriteHealthRoute
   ApiV1AppwriteTablesRoute: typeof ApiV1AppwriteTablesRoute
-  ApiV1AuthEmailStatusRoute: typeof ApiV1AuthEmailStatusRoute
   ApiV1AuthForgotPasswordRoute: typeof ApiV1AuthForgotPasswordRoute
   ApiV1AuthMeRoute: typeof ApiV1AuthMeRoute
   ApiV1AuthResetPasswordRoute: typeof ApiV1AuthResetPasswordRoute
@@ -390,6 +384,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/panelist': {
+      id: '/panelist'
+      path: '/panelist'
+      fullPath: '/panelist'
+      preLoaderRoute: typeof PanelistRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/faculty': {
       id: '/faculty'
       path: '/faculty'
@@ -399,10 +400,10 @@ declare module '@tanstack/react-router' {
     }
     '/panelist/': {
       id: '/panelist/'
-      path: '/panelist'
+      path: '/'
       fullPath: '/panelist/'
       preLoaderRoute: typeof PanelistIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PanelistRouteRoute
     }
     '/faculty/': {
       id: '/faculty/'
@@ -420,24 +421,24 @@ declare module '@tanstack/react-router' {
     }
     '/panelist/reviews': {
       id: '/panelist/reviews'
-      path: '/panelist/reviews'
+      path: '/reviews'
       fullPath: '/panelist/reviews'
       preLoaderRoute: typeof PanelistReviewsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PanelistRouteRoute
     }
     '/panelist/decisions': {
       id: '/panelist/decisions'
-      path: '/panelist/decisions'
+      path: '/decisions'
       fullPath: '/panelist/decisions'
       preLoaderRoute: typeof PanelistDecisionsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PanelistRouteRoute
     }
     '/panelist/chat': {
       id: '/panelist/chat'
-      path: '/panelist/chat'
+      path: '/chat'
       fullPath: '/panelist/chat'
       preLoaderRoute: typeof PanelistChatRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PanelistRouteRoute
     }
     '/faculty/documents': {
       id: '/faculty/documents'
@@ -565,13 +566,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/v1/auth/email-status': {
-      id: '/api/v1/auth/email-status'
-      path: '/api/v1/auth/email-status'
-      fullPath: '/api/v1/auth/email-status'
-      preLoaderRoute: typeof ApiV1AuthEmailStatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/v1/appwrite/tables': {
       id: '/api/v1/appwrite/tables'
       path: '/api/v1/appwrite/tables'
@@ -607,8 +601,27 @@ const FacultyRouteRouteWithChildren = FacultyRouteRoute._addFileChildren(
   FacultyRouteRouteChildren,
 )
 
+interface PanelistRouteRouteChildren {
+  PanelistChatRoute: typeof PanelistChatRoute
+  PanelistDecisionsRoute: typeof PanelistDecisionsRoute
+  PanelistReviewsRoute: typeof PanelistReviewsRoute
+  PanelistIndexRoute: typeof PanelistIndexRoute
+}
+
+const PanelistRouteRouteChildren: PanelistRouteRouteChildren = {
+  PanelistChatRoute: PanelistChatRoute,
+  PanelistDecisionsRoute: PanelistDecisionsRoute,
+  PanelistReviewsRoute: PanelistReviewsRoute,
+  PanelistIndexRoute: PanelistIndexRoute,
+}
+
+const PanelistRouteRouteWithChildren = PanelistRouteRoute._addFileChildren(
+  PanelistRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   FacultyRouteRoute: FacultyRouteRouteWithChildren,
+  PanelistRouteRoute: PanelistRouteRouteWithChildren,
   publicForgotPasswordRoute: publicForgotPasswordRoute,
   publicHomeRoute: publicHomeRoute,
   publicResetPasswordRoute: publicResetPasswordRoute,
@@ -616,15 +629,10 @@ const rootRouteChildren: RootRouteChildren = {
   publicSignInRoute: publicSignInRoute,
   publicSignupRoute: publicSignupRoute,
   publicVerifyEmailRoute: publicVerifyEmailRoute,
-  PanelistChatRoute: PanelistChatRoute,
-  PanelistDecisionsRoute: PanelistDecisionsRoute,
-  PanelistReviewsRoute: PanelistReviewsRoute,
   publicIndexRoute: publicIndexRoute,
-  PanelistIndexRoute: PanelistIndexRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1AppwriteHealthRoute: ApiV1AppwriteHealthRoute,
   ApiV1AppwriteTablesRoute: ApiV1AppwriteTablesRoute,
-  ApiV1AuthEmailStatusRoute: ApiV1AuthEmailStatusRoute,
   ApiV1AuthForgotPasswordRoute: ApiV1AuthForgotPasswordRoute,
   ApiV1AuthMeRoute: ApiV1AuthMeRoute,
   ApiV1AuthResetPasswordRoute: ApiV1AuthResetPasswordRoute,

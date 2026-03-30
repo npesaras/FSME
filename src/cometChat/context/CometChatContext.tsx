@@ -209,14 +209,6 @@ let chatBuilderName = 'cometchat-visual-builder-react';
 let chatBuilderVersion = '1.0.24';
 
 (async () => {
-  try {
-    const pkg = await import('../../../package.json');
-    chatBuilderName = pkg?.default?.cometChatCustomConfig.name ?? chatBuilderName;
-    chatBuilderVersion = pkg?.default?.cometChatCustomConfig.version ?? chatBuilderVersion;
-  } catch (e) {
-    // fallback silently
-  }
-
   if (typeof window !== 'undefined') {
     window.CometChatVisualBuilderReact = {
       name: chatBuilderName,

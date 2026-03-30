@@ -31,7 +31,6 @@ export default function ForgotPasswordPage() {
 
         const response = await forgotPassword({
           email: value.email,
-          origin: typeof window === 'undefined' ? '' : window.location.origin,
         })
 
         setSuccessMessage(response.message)

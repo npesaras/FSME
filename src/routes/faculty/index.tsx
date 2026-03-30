@@ -3,12 +3,15 @@ import FacultyDashboard from '../../features/faculty/pages/FacultyDashboard'
 import { documentTrackingQueryOptions } from '../../features/faculty/document-tracking.queries'
 import { recentActivitiesQueryOptions } from '../../features/faculty/recent-activities.queries'
 
+const facultyDashboardViews = ['dashboard', 'application', 'account-setting'] as const
+
+type FacultyDashboardView = (typeof facultyDashboardViews)[number]
+
 export const Route = createFileRoute('/faculty/')({
-  validateSearch: (search) => ({
-    view:
-      search.view === 'application' || search.view === 'account-setting'
-        ? search.view
-        : 'dashboard',
+  validateSearch: (search): { view: FacultyDashboardView } => ({
+    view: facultyDashboardViews.includes(search.view as FacultyDashboardView)
+      ? (search.view as FacultyDashboardView)
+      : 'dashboard',
   }),
   loaderDeps: ({ search }) => ({
     view: search.view,

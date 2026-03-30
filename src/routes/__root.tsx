@@ -58,6 +58,9 @@ function NotFoundPage() {
           </Link>
           <Link
             to="/faculty"
+            search={{
+              view: 'dashboard',
+            }}
             className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground no-underline transition hover:bg-accent/40"
           >
             Go to Faculty

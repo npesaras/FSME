@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AuthRuntime } from '../../src/server/features/auth/runtime.server'
 import {
+  handleForgotPasswordRequest,
+  handleHealthRequest,
   handleSignInRequest,
   handleSignUpRequest,
   handleVerifyEmailRequest,
@@ -8,8 +10,15 @@ import {
 
 function createRuntime(overrides: Partial<AuthRuntime['accounts']>) {
   return {
+    config: {
+      appwrite: {
+        databaseId: 'main',
+      },
+      server: {
+        nodeEnv: 'development',
+      },
+    },
     accounts: {
-      checkEmailStatus: vi.fn(),
       signUp: vi.fn(),
       signIn: vi.fn(),
       completeEmailVerification: vi.fn(),
@@ -93,6 +102,47 @@ describe('auth route handlers', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('set-cookie')).toContain('fsme_session=')
+  })
+
+  it('derives forgot-password origin from the request URL', async () => {
+    const runtime = createRuntime({
+      forgotPassword: vi.fn().mockResolvedValue({
+        message: 'If an account exists for that email, reset instructions have been sent.',
+      }),
+    })
+
+    const response = await handleForgotPasswordRequest(
+      new Request('https://fsme.example.com/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'faculty@example.com',
+        }),
+      }),
+      runtime,
+    )
+
+    expect(response.status).toBe(200)
+    expect(runtime.accounts.forgotPassword).toHaveBeenCalledWith({
+      email: 'faculty@example.com',
+      origin: 'https://fsme.example.com',
+    })
+  })
+
+  it('keeps the public health response free of deployment metadata', async () => {
+    const response = await handleHealthRequest(createRuntime({}))
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      status: 'ok',
+      checkedAt: expect.any(String),
+      uptimeSeconds: expect.any(Number),
+    })
+    expect(payload).not.toHaveProperty('envPaths')
+    expect(payload).not.toHaveProperty('appwrite')
   })
 
   it('completes verification through the auth API route', async () => {

@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { requireAuthenticatedRole } from '../../features/auth/session'
 import { panelistScopeLinks } from '../../features/panelist/config'
 import SharedChatWorkspacePage from '../../features/shared/chat/pages/SharedChatWorkspacePage'
 
@@ -16,8 +15,5 @@ function PanelistChatPage() {
 }
 
 export const Route = createFileRoute('/panelist/chat')({
-  beforeLoad: async () => {
-    await requireAuthenticatedRole('panelist')
-  },
   component: PanelistChatPage,
 })

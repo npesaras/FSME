@@ -149,5 +149,5 @@ export async function logRecentActivity(input: LogRecentActivityInput) {
     },
   })
 
-  return normalizeRecentActivityRow(row as RecentActivitiesTableRow)
+  return normalizeRecentActivityRow(row as unknown as RecentActivitiesTableRow)
 }

@@ -24,13 +24,8 @@ type SignUpPayload = {
   password: string
 }
 
-type EmailStatusPayload = {
-  email: string
-}
-
 type ForgotPasswordPayload = {
   email: string
-  origin: string
 }
 
 type ResetPasswordPayload = {
@@ -47,11 +42,6 @@ type VerifyEmailPayload = {
 type ApiErrorPayload = {
   message?: string
   code?: string
-}
-
-export type AuthEmailStatus = {
-  exists: boolean
-  verificationStatus: 'verified' | 'unverified' | 'missing'
 }
 
 export class AuthApiError extends Error {
@@ -80,10 +70,6 @@ function getReadableAuthErrorMessage({
 }) {
   if (code === 'INVALID_CREDENTIALS' || (path.includes('/auth/sign-in') && statusCode === 401)) {
     return 'We could not sign you in with that email and password. Please try again.'
-  }
-
-  if (code === 'ACCOUNT_NOT_FOUND') {
-    return 'Your account does not exist. Please sign up if you do not have an account yet.'
   }
 
   if (code === 'EMAIL_NOT_VERIFIED') {
@@ -172,12 +158,6 @@ export function signIn(payload: SignInPayload) {
 
 export function signUp(payload: SignUpPayload) {
   return sendAuthRequest<AuthVerificationPendingResponse>('/api/v1/auth/sign-up', {
-    payload,
-  })
-}
-
-export function checkEmailStatus(payload: EmailStatusPayload) {
-  return sendAuthRequest<AuthEmailStatus>('/api/v1/auth/email-status', {
     payload,
   })
 }

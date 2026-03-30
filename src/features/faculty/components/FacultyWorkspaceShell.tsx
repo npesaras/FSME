@@ -117,18 +117,12 @@ export function FacultyWorkspaceShell({
     }
 
     let cancelled = false
-    let timeoutId: number | undefined
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
     let idleId: number | undefined
 
     const warmChatWorkspace = () => {
       if (cancelled) {
         return
-      }
-
-      const chatRoute = router.routesByPath['/faculty/chat']
-
-      if (chatRoute) {
-        void router.loadRouteChunk(chatRoute).catch(() => undefined)
       }
 
       void preloadChatWorkspace('faculty')
@@ -139,7 +133,7 @@ export function FacultyWorkspaceShell({
         timeout: 1200,
       })
     } else {
-      timeoutId = window.setTimeout(warmChatWorkspace, 300)
+      timeoutId = setTimeout(warmChatWorkspace, 300)
     }
 
     return () => {
@@ -154,7 +148,7 @@ export function FacultyWorkspaceShell({
       }
 
       if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId)
+        clearTimeout(timeoutId)
       }
     }
   }, [activeSection, router])
@@ -201,6 +195,9 @@ export function FacultyWorkspaceShell({
 
     void navigate({
       to: '/faculty',
+      search: {
+        view: 'dashboard',
+      },
     })
   }
 

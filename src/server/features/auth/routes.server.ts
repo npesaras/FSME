@@ -6,7 +6,6 @@ import {
   jsonResponse,
 } from '../../shared/errors.server'
 import {
-  emailStatusSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   signInSchema,
@@ -15,15 +14,57 @@ import {
 } from './schemas'
 import { createResponseHeaders, parseJsonRequest } from '../../utils/http.server'
 
-export async function handleHealthRequest(runtime: AuthRuntime = authRuntime) {
+function createUnauthorizedError() {
+  return new AppError(401, 'Authentication required.', {
+    code: 'UNAUTHORIZED',
+  })
+}
+
+async function assertInternalDiagnosticsAccess(
+  request: Request,
+  runtime: AuthRuntime,
+) {
+  if (runtime.config.server.nodeEnv === 'production') {
+    throw new AppError(404, 'Not found.', {
+      code: 'NOT_FOUND',
+    })
+  }
+
+  const sessionSecret = getSessionSecretFromRequest(request)
+
+  if (!sessionSecret) {
+    throw createUnauthorizedError()
+  }
+
+  await runtime.accounts.getCurrentAccount(sessionSecret)
+}
+
+export async function handleHealthRequest(_runtime: AuthRuntime = authRuntime) {
   try {
     return jsonResponse({
       status: 'ok',
+      checkedAt: new Date().toISOString(),
       uptimeSeconds: Number(process.uptime().toFixed(2)),
-      envPaths: runtime.config.envPaths,
-      appwrite: {
-        databaseId: runtime.config.appwrite.databaseId,
-        userProfilesTableId: runtime.config.appwrite.userProfilesTableId,
+    })
+  } catch (error) {
+    return errorResponse(error)
+  }
+}
+
+export async function handleAppwriteHealthRequest(
+  request: Request,
+  runtime: AuthRuntime = authRuntime,
+) {
+  try {
+    await assertInternalDiagnosticsAccess(request, runtime)
+    const status = await runtime.getAppwriteStatus()
+
+    return jsonResponse({
+      status: status.status,
+      checkedAt: new Date().toISOString(),
+      services: status.services,
+      tables: {
+        total: status.tables.total,
       },
     })
   } catch (error) {
@@ -31,19 +72,12 @@ export async function handleHealthRequest(runtime: AuthRuntime = authRuntime) {
   }
 }
 
-export async function handleAppwriteHealthRequest(runtime: AuthRuntime = authRuntime) {
+export async function handleAppwriteTablesRequest(
+  request: Request,
+  runtime: AuthRuntime = authRuntime,
+) {
   try {
-    return jsonResponse({
-      ...(await runtime.getAppwriteStatus()),
-      checkedAt: new Date().toISOString(),
-    })
-  } catch (error) {
-    return errorResponse(error)
-  }
-}
-
-export async function handleAppwriteTablesRequest(runtime: AuthRuntime = authRuntime) {
-  try {
+    await assertInternalDiagnosticsAccess(request, runtime)
     const result = await runtime.appwrite.tablesDB.listTables({
       databaseId: runtime.config.appwrite.databaseId,
     })
@@ -73,20 +107,6 @@ export async function handleSignUpRequest(request: Request, runtime: AuthRuntime
     return jsonResponse(response, {
       status: 201,
     })
-  } catch (error) {
-    return errorResponse(error)
-  }
-}
-
-export async function handleEmailStatusRequest(
-  request: Request,
-  runtime: AuthRuntime = authRuntime
-) {
-  try {
-    const payload = await parseJsonRequest(request, emailStatusSchema)
-    const result = await runtime.accounts.checkEmailStatus(payload)
-
-    return jsonResponse(result)
   } catch (error) {
     return errorResponse(error)
   }
@@ -140,11 +160,7 @@ export async function handleCurrentAccountRequest(
   const sessionSecret = getSessionSecretFromRequest(request)
 
   if (!sessionSecret) {
-    return errorResponse(
-      new AppError(401, 'Authentication required.', {
-        code: 'UNAUTHORIZED',
-      })
-    )
+    return errorResponse(createUnauthorizedError())
   }
 
   try {
@@ -197,7 +213,10 @@ export async function handleForgotPasswordRequest(
 ) {
   try {
     const payload = await parseJsonRequest(request, forgotPasswordSchema)
-    const response = await runtime.accounts.forgotPassword(payload)
+    const response = await runtime.accounts.forgotPassword({
+      email: payload.email,
+      origin: new URL(request.url).origin,
+    })
 
     return jsonResponse(response)
   } catch (error) {

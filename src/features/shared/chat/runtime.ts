@@ -66,8 +66,12 @@ export async function ensureCometChatInitialized(
       .setAuthKey(config.authKey)
       .subscribePresenceForAllUsers()
       .build()
+    const initCometChatUIKit = CometChatUIKit.init?.bind(CometChatUIKit)
+    const initResult = initCometChatUIKit?.(uiKitSettings)
 
-    initPromise = CometChatUIKit.init(uiKitSettings)
+    initPromise = (
+      initResult ?? Promise.reject(new Error('CometChat UIKit initialization is unavailable.'))
+    )
       .then(() => {
         setupLocalization()
         initializedSignature = signature

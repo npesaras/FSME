@@ -20,11 +20,9 @@ import {
 } from '../components/authClassNames'
 import { signUp } from '../api'
 import {
-  existingAccountMessage,
   getAuthPageErrorMessage,
   normalizeEmailInput,
   normalizeNameInput,
-  useEmailAvailability,
   useGuardedFormSubmit,
   validateAcceptedTerms,
   validateEmailInput,
@@ -38,7 +36,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const { emailAvailability, checkEmailExists, trackEmailInput } = useEmailAvailability()
   const clearSubmitError = useCallback(() => {
     setSubmitError((current) => (current ? null : current))
   }, [])
@@ -56,18 +53,6 @@ export default function SignupPage() {
 
         const normalizedEmail = normalizeEmailInput(value.email)
         const normalizedName = normalizeNameInput(value.name)
-        const emailExists =
-          emailAvailability.email === normalizedEmail && emailAvailability.status === 'exists'
-            ? true
-            : emailAvailability.email === normalizedEmail &&
-                emailAvailability.status === 'available'
-              ? false
-              : await checkEmailExists(normalizedEmail)
-
-        if (emailExists) {
-          setSubmitError(existingAccountMessage)
-          return
-        }
 
         const response = await signUp({
           name: normalizedName,
@@ -79,6 +64,8 @@ export default function SignupPage() {
           to: '/verify-email',
           search: {
             email: response.email,
+            userId: undefined,
+            secret: undefined,
           },
           replace: true,
         })
@@ -185,28 +172,10 @@ export default function SignupPage() {
           name="email"
           validators={{
             onChange: ({ value }) => validateEmailInput(value),
-            onBlurAsyncDebounceMs: 250,
-            onBlurAsync: async ({ value }) => {
-              const emailExists = await checkEmailExists(value)
-
-              return emailExists ? existingAccountMessage : undefined
-            },
           }}
         >
           {(field) => {
             const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
-            const normalizedEmail = normalizeEmailInput(field.state.value)
-            const hasExistingAccountError = error === existingAccountMessage
-            const isCheckingEmail =
-              field.state.meta.isTouched &&
-              field.state.meta.isValidating &&
-              emailAvailability.email === normalizedEmail &&
-              emailAvailability.status === 'checking'
-            const hasExistingAccount =
-              !hasExistingAccountError &&
-              field.state.meta.isTouched &&
-              emailAvailability.email === normalizedEmail &&
-              emailAvailability.status === 'exists'
 
             return (
               <div className="space-y-1.5">
@@ -222,12 +191,9 @@ export default function SignupPage() {
                     autoCapitalize="none"
                     spellCheck={false}
                     value={field.state.value}
-                    onBlur={() => {
-                      field.handleBlur()
-                    }}
+                    onBlur={field.handleBlur}
                     onChange={(event) => {
                       clearSubmitError()
-                      trackEmailInput(event.target.value)
                       field.handleChange(event.target.value)
                     }}
                     className={authCompactInputClassName}
@@ -237,22 +203,8 @@ export default function SignupPage() {
                     <Mail className={authCompactTrailingIconClassName} />
                   </div>
                 </div>
-                {error && !hasExistingAccountError ? (
+                {error ? (
                   <p className={authCompactErrorTextClassName}>{String(error)}</p>
-                ) : null}
-                {!error && isCheckingEmail ? (
-                  <p className="text-[13px] font-medium text-muted-foreground">
-                    Checking if this email already exists...
-                  </p>
-                ) : null}
-                {hasExistingAccountError || hasExistingAccount ? (
-                  <p className={authCompactErrorTextClassName}>
-                    This email is already registered.{' '}
-                    <Link to="/sign-in" className={authLinkClassName}>
-                      Sign in instead
-                    </Link>
-                    .
-                  </p>
                 ) : null}
               </div>
             )
@@ -407,19 +359,10 @@ export default function SignupPage() {
           {([canSubmit, isSubmitting]) => (
             <button
               type="submit"
-              disabled={
-                !canSubmit ||
-                isSubmitting ||
-                emailAvailability.status === 'checking' ||
-                emailAvailability.status === 'exists'
-              }
+              disabled={!canSubmit || isSubmitting}
               className={authCompactPrimaryButtonClassName}
             >
-              {isSubmitting
-                ? 'Signing Up...'
-                : emailAvailability.status === 'checking'
-                  ? 'Checking Email...'
-                  : 'Sign Up'}
+              {isSubmitting ? 'Signing Up...' : 'Sign Up'}
             </button>
           )}
         </form.Subscribe>

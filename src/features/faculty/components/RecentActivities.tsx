@@ -45,12 +45,6 @@ export const RecentActivities = ({ accountId }: RecentActivitiesProps) => {
           </div>
         )}
       </div>
-
-      <div className="mt-4 border-t border-border/60 pt-3 text-center">
-        <button className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
-          See All Activities
-        </button>
-      </div>
     </div>
   )
 }

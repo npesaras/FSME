@@ -19,5 +19,5 @@ export const Route = createFileRoute('/faculty/')({
 function FacultyDashboardRoute() {
   const { account } = Route.useRouteContext()
 
-  return <FacultyDashboard accountId={account.id} />
+  return <FacultyDashboard account={account} />
 }

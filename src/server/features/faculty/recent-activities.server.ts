@@ -4,7 +4,14 @@ import { appwrite } from '../../plugins/appwrite.server'
 import { config } from '../../shared/config.server'
 import type { RecentActivityRecord } from '#/features/faculty/recent-activities'
 
-type AppwriteRow = Models.Row & Record<string, unknown>
+interface RecentActivitiesTableRow extends Models.Row {
+  applicant_id: string
+  application_id?: string
+  activity_type: string
+  title: string
+  description: string
+  occurred_at: string
+}
 
 interface LogRecentActivityInput {
   applicantId: string
@@ -13,22 +20,6 @@ interface LogRecentActivityInput {
   activityType?: string
   occurredAt?: string
   applicationId?: string
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function readString(row: Record<string, unknown>, ...keys: string[]) {
-  for (const key of keys) {
-    const value = row[key]
-
-    if (typeof value === 'string' && value.trim()) {
-      return value
-    }
-  }
-
-  return undefined
 }
 
 function isSameCalendarDay(left: Date, right: Date) {
@@ -94,18 +85,16 @@ function formatRecentActivityTime(value?: string) {
   }).format(parsed)
 }
 
-function normalizeRecentActivityRow(row: AppwriteRow): RecentActivityRecord {
-  const occurredAt = readString(row, 'occurred_at', 'created_at', '$createdAt') || row.$createdAt
-
+function normalizeRecentActivityRow(
+  row: RecentActivitiesTableRow,
+): RecentActivityRecord {
   return {
     id: row.$id,
-    title: readString(row, 'title', 'action_type') || 'Recent activity',
-    description:
-      readString(row, 'description', 'action_summary', 'remarks') ||
-      'A new activity was recorded for your account.',
-    timeLabel: formatRecentActivityTime(occurredAt),
-    occurredAt,
-    activityType: readString(row, 'activity_type', 'action_type') || 'general',
+    title: row.title,
+    description: row.description,
+    timeLabel: formatRecentActivityTime(row.occurred_at),
+    occurredAt: row.occurred_at,
+    activityType: row.activity_type,
   }
 }
 
@@ -115,7 +104,7 @@ function isMissingTableError(error: unknown) {
 
 export async function listRecentActivitiesForFaculty(accountId: string) {
   try {
-    const result = await appwrite.tablesDB.listRows({
+    const result = await appwrite.tablesDB.listRows<RecentActivitiesTableRow>({
       databaseId: config.appwrite.databaseId,
       tableId: config.appwrite.recentActivitiesTableId,
       queries: [
@@ -123,11 +112,10 @@ export async function listRecentActivitiesForFaculty(accountId: string) {
         Query.orderDesc('occurred_at'),
         Query.limit(5),
       ],
+      total: false,
     })
 
-    return result.rows
-      .filter(isRecord)
-      .map((row) => normalizeRecentActivityRow(row as AppwriteRow))
+    return result.rows.map((row) => normalizeRecentActivityRow(row))
   } catch (error) {
     if (isMissingTableError(error)) {
       return []
@@ -161,5 +149,5 @@ export async function logRecentActivity(input: LogRecentActivityInput) {
     },
   })
 
-  return normalizeRecentActivityRow(row as AppwriteRow)
+  return normalizeRecentActivityRow(row as RecentActivitiesTableRow)
 }

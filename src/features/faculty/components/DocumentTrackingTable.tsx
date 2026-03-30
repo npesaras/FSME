@@ -68,7 +68,7 @@ const columns: ColumnDef<DocumentTrackingRecord>[] = [
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <FileText className="h-4 w-4 text-primary" />
-        <span className="max-w-[200px] cursor-pointer truncate text-sm font-medium text-primary hover:underline">
+        <span className="max-w-[200px] truncate text-sm font-medium text-primary">
           {row.original.fileName}
         </span>
       </div>
@@ -106,12 +106,12 @@ export function DocumentTrackingTable({ accountId }: DocumentTrackingTableProps)
         <div>
           <h2 className="text-lg font-bold text-foreground">Document Tracking</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Real-time document submission and approval tracking
+            Review the latest document submission statuses and remarks.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 animate-pulse rounded-full bg-primary"></span>
-          <span className="text-xs font-medium text-primary">Live Updates</span>
+          <span className="flex h-2 w-2 rounded-full bg-primary/80"></span>
+          <span className="text-xs font-medium text-primary">Latest sync</span>
         </div>
       </div>
 

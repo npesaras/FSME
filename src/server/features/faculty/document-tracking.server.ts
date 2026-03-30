@@ -7,45 +7,18 @@ import type {
   DocumentTrackingStatus,
 } from '#/features/faculty/document-tracking'
 
-type AppwriteRow = Models.Row & Record<string, unknown>
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
+interface DocumentTrackingTableRow extends Models.Row {
+  applicant_id: string
+  application_id?: string
+  file_name: string
+  status: string
+  remarks?: string
+  uploaded_at: string
 }
 
-function readString(row: Record<string, unknown>, ...keys: string[]) {
-  for (const key of keys) {
-    const value = row[key]
-
-    if (typeof value === 'string' && value.trim()) {
-      return value
-    }
-  }
-
-  return undefined
-}
-
-function mapStatus(rawStatus?: string): DocumentTrackingStatus {
-  const normalizedStatus = rawStatus?.trim().toLowerCase()
-
-  if (!normalizedStatus) {
-    return 'Pending'
-  }
-
-  if (
-    normalizedStatus.includes('accept') ||
-    normalizedStatus.includes('approve') ||
-    normalizedStatus.includes('recommend')
-  ) {
-    return 'Accepted'
-  }
-
-  if (
-    normalizedStatus.includes('reject') ||
-    normalizedStatus.includes('return') ||
-    normalizedStatus.includes('fail')
-  ) {
-    return 'Rejected'
+function normalizeStatus(rawStatus: string): DocumentTrackingStatus {
+  if (rawStatus === 'Accepted' || rawStatus === 'Rejected') {
+    return rawStatus
   }
 
   return 'Pending'
@@ -89,26 +62,22 @@ function formatDocumentDate(value?: string) {
   return `${datePart} ${timePart}`
 }
 
-function normalizeDocumentTrackingRow(row: AppwriteRow): DocumentTrackingRecord {
-  const status = mapStatus(
-    readString(row, 'status', 'document_status', 'review_status', 'current_status'),
-  )
+function normalizeDocumentTrackingRow(
+  row: DocumentTrackingTableRow,
+): DocumentTrackingRecord {
+  const status = normalizeStatus(row.status)
 
   return {
     id: row.$id,
-    date: formatDocumentDate(readString(row, 'uploaded_at', 'date', '$createdAt')),
+    date: formatDocumentDate(row.uploaded_at),
     status,
-    fileName:
-      readString(row, 'file_name', 'requirement_name', 'title', 'name', 'file_id') ||
-      'Untitled document',
-    remarks:
-      readString(row, 'remarks', 'review_notes', 'missing_items', 'action_summary') ||
-      getDefaultRemark(status),
+    fileName: row.file_name,
+    remarks: row.remarks?.trim() || getDefaultRemark(status),
   }
 }
 
 export async function listDocumentTrackingRecordsForFaculty(accountId: string) {
-  const result = await appwrite.tablesDB.listRows({
+  const result = await appwrite.tablesDB.listRows<DocumentTrackingTableRow>({
     databaseId: config.appwrite.databaseId,
     tableId: config.appwrite.documentTrackingTableId,
     queries: [
@@ -116,9 +85,8 @@ export async function listDocumentTrackingRecordsForFaculty(accountId: string) {
       Query.orderDesc('uploaded_at'),
       Query.limit(20),
     ],
+    total: false,
   })
 
-  return result.rows
-    .filter(isRecord)
-    .map((row) => normalizeDocumentTrackingRow(row as AppwriteRow))
+  return result.rows.map((row) => normalizeDocumentTrackingRow(row))
 }

@@ -1,22 +1,22 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate, useRouter } from '@tanstack/react-router'
 import {
-  LayoutDashboard,
-  Globe,
-  ChevronDown,
-  Menu,
-  UserCircle,
-  LogOut,
   AppWindow,
-  MessageSquare,
   Bell,
+  FileText,
+  Globe,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquare,
   Settings,
+  UserCircle,
 } from 'lucide-react'
 
 import { signOut } from '../../auth/api'
+import type { AuthAccount } from '../../auth/types'
 import { AccountSettings } from '../components/AccountSettings'
 import { Calendar } from '../components/Calendar'
-import { FacultyChatView } from '../components/FacultyChatView'
 import { DocumentTrackingTable } from '../components/DocumentTrackingTable'
 import { RecentActivities } from '../components/RecentActivities'
 import { ScholarshipApplication } from '../components/ScholarshipApplication'
@@ -25,77 +25,91 @@ interface NavItemProps {
   icon: ReactNode
   label: string
   active?: boolean
-  subItems?: { label: string; icon: ReactNode; id?: string }[]
-  onNavigate?: (view: string) => void
+  onSelect?: () => void
 }
 
-const SidebarItem = ({ icon, label, active, subItems, onNavigate }: NavItemProps) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const hasSubmenu = Boolean(subItems?.length)
+type FacultyDashboardView = 'dashboard' | 'application' | 'account-setting'
 
-  const toggleMenu = () => {
-    if (hasSubmenu) {
-      setIsOpen(!isOpen)
-    } else if (onNavigate) {
-      onNavigate(label.toLowerCase().replace(' ', '-'))
-    }
-  }
-
+function SidebarItem({
+  icon,
+  label,
+  active,
+  onSelect,
+}: NavItemProps) {
   return (
-    <div className="mb-1">
-      <div
-        onClick={toggleMenu}
-        className={`flex cursor-pointer items-center justify-between px-4 py-3 transition-colors ${active
-            ? 'border-r-4 border-primary bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
-          }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className={active ? 'text-primary' : 'text-muted-foreground'}>
-            {icon}
-          </div>
-          <span className="font-medium text-sm">{label}</span>
-        </div>
-        {hasSubmenu && (
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
-          />
-        )}
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+        active
+          ? 'border-r-4 border-primary bg-primary/10 text-primary'
+          : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+      }`}
+    >
+      <div className={active ? 'text-primary' : 'text-muted-foreground'}>
+        {icon}
       </div>
-
-      {hasSubmenu && isOpen && (
-        <div className="bg-accent/20 py-2">
-          {(subItems ?? []).map((item, index) => (
-            <div
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (onNavigate && item.id) {
-                  onNavigate(item.id)
-                }
-              }}
-              className="flex cursor-pointer items-center gap-3 px-4 py-2 pl-12 text-muted-foreground transition-colors hover:bg-accent/40 hover:text-primary"
-            >
-              <div className="h-4 w-4 text-muted-foreground">{item.icon}</div>
-              <span className="text-sm">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      <span className="text-sm font-medium">{label}</span>
+    </button>
   )
 }
 
-interface FacultyDashboardProps {
-  accountId: string
+function getFirstName(name: string) {
+  return name.trim().split(/\s+/)[0] || 'there'
 }
 
-export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+
+  if (parts.length === 0) {
+    return 'FA'
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase() || '').join('')
+}
+
+function getRoleLabel(role: AuthAccount['role']) {
+  return role === 'faculty' ? 'Faculty applicant' : 'Panelist'
+}
+
+function formatLastSignIn(lastSignInAt: string | null) {
+  if (!lastSignInAt) {
+    return 'No recent sign-in recorded'
+  }
+
+  const parsed = new Date(lastSignInAt)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return lastSignInAt
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(parsed)
+}
+
+interface FacultyDashboardProps {
+  account: AuthAccount
+}
+
+export default function FacultyDashboard({
+  account,
+}: FacultyDashboardProps) {
   const navigate = useNavigate()
   const router = useRouter()
-  const [currentView, setCurrentView] = useState('dashboard')
+  const [currentView, setCurrentView] =
+    useState<FacultyDashboardView>('dashboard')
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const roleLabel = getRoleLabel(account.role)
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -117,42 +131,53 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
     }
   }
 
+  const handleRouteNavigation = (
+    to: '/faculty/documents' | '/faculty/chat',
+  ) => {
+    setIsProfileOpen(false)
+    void navigate({ to })
+  }
+
   return (
     <div className="faculty-shell flex min-h-screen w-full overflow-hidden font-sans text-foreground">
       <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col overflow-y-auto border-r border-border/80 bg-card md:flex">
-        <div className="p-6 flex items-center gap-3">
+        <div className="flex items-center gap-3 p-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
             <Globe className="h-5 w-5" />
           </div>
-          <span className="leading-tight text-xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+          <span className="text-xl leading-tight font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
             Tanaw School System
           </span>
         </div>
 
-        <nav className="flex-1 py-4 space-y-1">
+        <nav className="flex-1 space-y-1 py-4">
           <SidebarItem
             icon={<LayoutDashboard size={20} />}
             label="Dashboard"
             active={currentView === 'dashboard'}
-            onNavigate={() => setCurrentView('dashboard')}
+            onSelect={() => setCurrentView('dashboard')}
           />
           <SidebarItem
             icon={<AppWindow size={20} />}
             label="Application"
             active={currentView === 'application'}
-            onNavigate={() => setCurrentView('application')}
+            onSelect={() => setCurrentView('application')}
+          />
+          <SidebarItem
+            icon={<FileText size={20} />}
+            label="Documents"
+            onSelect={() => handleRouteNavigation('/faculty/documents')}
           />
           <SidebarItem
             icon={<MessageSquare size={20} />}
             label="Chat"
-            active={currentView === 'chat'}
-            onNavigate={() => setCurrentView('chat')}
+            onSelect={() => handleRouteNavigation('/faculty/chat')}
           />
           <SidebarItem
             icon={<UserCircle size={20} />}
-            label="Account Setting"
+            label="Account Settings"
             active={currentView === 'account-setting'}
-            onNavigate={() => setCurrentView('account-setting')}
+            onSelect={() => setCurrentView('account-setting')}
           />
 
           <div className="mx-4 my-4 border-t border-border/70"></div>
@@ -160,51 +185,55 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
           <SidebarItem
             icon={<LogOut size={20} />}
             label={isSigningOut ? 'Signing Out...' : 'Logout'}
-            onNavigate={() => {
+            onSelect={() => {
               void handleSignOut()
             }}
           />
         </nav>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/80 bg-card px-6">
-          <div className="flex items-center gap-4 flex-1">
-            <button className="md:hidden">
+          <div className="flex flex-1 items-center gap-4">
+            <button type="button" className="md:hidden">
               <Menu className="h-6 w-6 text-muted-foreground" />
             </button>
           </div>
 
           <div className="flex items-center gap-5">
-            <button className="relative text-muted-foreground transition-colors hover:text-primary">
-              <Bell className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              <span className="absolute right-[2px] top-[2px] h-[7px] w-[7px] rounded-full border border-background bg-destructive"></span>
+            <button
+              type="button"
+              className="relative text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Bell className="h-[22px] w-[22px]" strokeWidth={1.5} />
+              <span className="absolute top-[2px] right-[2px] h-[7px] w-[7px] rounded-full border border-background bg-destructive"></span>
             </button>
 
             <div className="mx-2 hidden h-8 w-px bg-border md:block"></div>
 
             <div className="relative">
               <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                type="button"
+                onClick={() => setIsProfileOpen((open) => !open)}
                 className="flex cursor-pointer items-center gap-3 rounded-lg p-1 transition-colors hover:bg-accent/40"
               >
-                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-border shadow-sm">
-                  <img
-                    src="https://images.unsplash.com/photo-1554765345-6ad6a5417cde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBtYW4lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzQ2NTUyOTR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                    alt="Thomas Anree"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-sm font-bold text-primary shadow-sm">
+                  {getInitials(account.name)}
                 </div>
-                <div className="text-left hidden md:block mr-2">
-                  <p className="leading-tight text-[14px] font-bold text-foreground">Thomas Anree</p>
-                  <p className="mt-0.5 text-[12px] text-muted-foreground">UX/UI Designer</p>
+                <div className="mr-2 hidden text-left md:block">
+                  <p className="text-[14px] leading-tight font-bold text-foreground">
+                    {account.name}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">
+                    {roleLabel}
+                  </p>
                 </div>
-                <ChevronDown className={`hidden h-4 w-4 text-muted-foreground transition-transform md:block ${isProfileOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {isProfileOpen && (
+              {isProfileOpen ? (
                 <div className="faculty-panel animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 rounded-xl bg-popover py-2 text-popover-foreground shadow-lg">
                   <button
+                    type="button"
                     onClick={() => {
                       setCurrentView('account-setting')
                       setIsProfileOpen(false)
@@ -212,10 +241,11 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] font-medium text-foreground transition-colors hover:bg-accent/40 hover:text-primary"
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />
-                    Account Setting
+                    Account Settings
                   </button>
                   <div className="my-1 h-px bg-border"></div>
                   <button
+                    type="button"
                     onClick={() => {
                       void handleSignOut()
                     }}
@@ -226,80 +256,78 @@ export default function FacultyDashboard({ accountId }: FacultyDashboardProps) {
                     {isSigningOut ? 'Signing Out...' : 'Logout'}
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </header>
 
-        {currentView === 'chat' ? (
-          <div className="flex-1 flex">
-            <FacultyChatView />
-          </div>
-        ) : (
-          <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
-            {currentView === 'dashboard' && (
-              <>
-                <section className="mb-6">
-                  <div className="faculty-hero relative flex min-h-[160px] w-full items-center justify-between overflow-hidden rounded-[1.5rem] p-6 text-primary-foreground">
-                    <div className="relative z-10 flex h-full max-w-[60%] flex-col justify-center">
-                      <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-primary-foreground/72 uppercase">
-                        Faculty Workspace
-                      </p>
-                      <h1 className="mb-2 text-2xl font-bold md:text-3xl [font-family:var(--font-heading)]">
-                        Welcome back, Juan!
-                      </h1>
-                      <p className="text-sm text-primary-foreground/82">Faculty Scholarship</p>
-                    </div>
-                    <div className="z-10 hidden pr-8 text-right md:block">
-                      <div className="text-3xl font-bold text-primary-foreground">Thursday, 7:30 PM</div>
-                      <div className="mt-1 text-lg font-semibold text-primary-foreground/72">09 Feb 2024</div>
-                    </div>
-                  </div>
-                </section>
-
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-                  <div className="space-y-6 lg:col-span-3">
-                    <DocumentTrackingTable accountId={accountId} />
-                  </div>
-                  <div className="space-y-6 lg:col-span-1">
-                    <Calendar />
-                    <RecentActivities accountId={accountId} />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {currentView === 'application' && (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-1">
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
-                    Faculty Scholarship Application
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Complete your application for the upcoming faculty development program.
-                  </p>
-                </div>
-                <ScholarshipApplication />
-              </div>
-            )}
-
-            {currentView === 'account-setting' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground [font-family:var(--font-heading)]">
-                      Account Settings
+        <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+          {currentView === 'dashboard' ? (
+            <>
+              <section className="mb-6">
+                <div className="faculty-hero relative flex min-h-[160px] w-full items-center justify-between overflow-hidden rounded-[1.5rem] p-6 text-primary-foreground">
+                  <div className="relative z-10 flex h-full max-w-[60%] flex-col justify-center">
+                    <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-primary-foreground/72 uppercase">
+                      Faculty Workspace
+                    </p>
+                    <h1 className="mb-2 text-2xl font-bold md:text-3xl [font-family:var(--font-heading)]">
+                      Welcome back, {getFirstName(account.name)}!
                     </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Manage your profile, security preferences, and personal data.
+                    <p className="text-sm text-primary-foreground/82">
+                      {roleLabel}
                     </p>
                   </div>
+                  <div className="z-10 hidden pr-8 text-right md:block">
+                    <div className="text-2xl font-bold text-primary-foreground">
+                      {account.status}
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-primary-foreground/72">
+                      Last sign-in {formatLastSignIn(account.lastSignInAt)}
+                    </div>
+                  </div>
                 </div>
-                <AccountSettings />
+              </section>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                <div className="space-y-6 lg:col-span-3">
+                  <DocumentTrackingTable accountId={account.id} />
+                </div>
+                <div className="space-y-6 lg:col-span-1">
+                  <Calendar />
+                  <RecentActivities accountId={account.id} />
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </>
+          ) : currentView === 'application' ? (
+            <div className="space-y-6">
+              <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+                  Faculty Scholarship Application
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Complete your application for the upcoming faculty development
+                  program.
+                </p>
+              </div>
+              <ScholarshipApplication />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground [font-family:var(--font-heading)]">
+                    Account Settings
+                  </h1>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Manage your profile, security preferences, and personal
+                    data.
+                  </p>
+                </div>
+              </div>
+              <AccountSettings />
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )

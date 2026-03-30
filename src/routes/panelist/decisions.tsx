@@ -1,6 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import PanelistDecisionsPage from '../../features/panelist/pages/PanelistDecisionsPage'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/panelist/decisions')({
-  component: PanelistDecisionsPage,
+  beforeLoad: () => {
+    throw redirect({
+      to: '/panelist',
+    })
+  },
 })

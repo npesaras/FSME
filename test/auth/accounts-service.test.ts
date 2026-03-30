@@ -35,9 +35,6 @@ function createTestService() {
     list: vi.fn(),
     get: vi.fn(),
     delete: vi.fn(),
-    updateStatus: vi.fn(),
-    updateLabels: vi.fn(),
-    updatePrefs: vi.fn(),
   }
   const adminAccount = {
     createEmailPasswordSession: vi.fn(),
@@ -59,6 +56,8 @@ function createTestService() {
     updateRow: vi.fn(),
     deleteRow: vi.fn(),
   }
+
+  tablesDB.listRows.mockResolvedValue({ rows: [], total: 0 })
 
   const service = createAccountsService({
     users,
@@ -94,8 +93,12 @@ describe('accounts service verification flow', () => {
 
     users.list.mockResolvedValue({ users: [] })
     authAccount.create.mockResolvedValue(createUser({ emailVerification: false, labels: [], prefs: {} }))
-    users.updateLabels.mockResolvedValue({})
-    users.updatePrefs.mockResolvedValue({})
+    tablesDB.createRow.mockResolvedValue({
+      $id: 'profile-1',
+      user_id: 'user-1',
+      full_name: 'Faculty User',
+      role: 'faculty',
+    })
     adminAccount.createEmailPasswordSession.mockResolvedValue({
       secret: 'temp-session-secret',
       expire: '2026-03-31T00:00:00.000Z',
@@ -121,7 +124,16 @@ describe('accounts service verification flow', () => {
     expect(sessionAccount.deleteSession).toHaveBeenCalledWith({
       sessionId: 'current',
     })
-    expect(tablesDB.createRow).not.toHaveBeenCalled()
+    expect(tablesDB.createRow).toHaveBeenCalledWith({
+      databaseId: 'main',
+      tableId: 'user_profiles',
+      rowId: expect.any(String),
+      data: {
+        user_id: 'user-1',
+        full_name: 'Faculty User',
+        role: 'faculty',
+      },
+    })
   })
 
   it('blocks sign-in for unverified users and resends verification', async () => {
@@ -155,6 +167,72 @@ describe('accounts service verification flow', () => {
     expect(tablesDB.createRow).not.toHaveBeenCalled()
   })
 
+  it('uses the mirrored user profile role for verified sign-in', async () => {
+    const { adminAccount, service, sessionAccount, tablesDB } = createTestService()
+
+    adminAccount.createEmailPasswordSession.mockResolvedValue({
+      secret: 'verified-session-secret',
+      expire: '2026-03-31T00:00:00.000Z',
+    })
+    sessionAccount.get.mockResolvedValue(
+      createUser({
+        labels: ['faculty'],
+        prefs: { role: 'faculty' },
+      }),
+    )
+    tablesDB.listRows.mockResolvedValue({
+      rows: [
+        {
+          $id: 'profile-1',
+          user_id: 'user-1',
+          full_name: 'Faculty User',
+          role: 'panelist',
+        },
+      ],
+      total: 1,
+    })
+
+    await expect(
+      service.signIn({
+        email: 'faculty@example.com',
+        password: 'secure-password',
+        origin: 'http://localhost:3000',
+      }),
+    ).resolves.toMatchObject({
+      account: {
+        role: 'panelist',
+      },
+    })
+
+    expect(tablesDB.updateRow).not.toHaveBeenCalled()
+  })
+
+  it('rejects verified sign-in when no user_profiles role exists', async () => {
+    const { adminAccount, service, sessionAccount } = createTestService()
+
+    adminAccount.createEmailPasswordSession.mockResolvedValue({
+      secret: 'verified-session-secret',
+      expire: '2026-03-31T00:00:00.000Z',
+    })
+    sessionAccount.get.mockResolvedValue(createUser())
+    sessionAccount.deleteSession.mockResolvedValue({})
+
+    await expect(
+      service.signIn({
+        email: 'faculty@example.com',
+        password: 'secure-password',
+        origin: 'http://localhost:3000',
+      }),
+    ).rejects.toMatchObject({
+      code: 'ACCOUNT_ROLE_MISSING',
+      statusCode: 403,
+    })
+
+    expect(sessionAccount.deleteSession).toHaveBeenCalledWith({
+      sessionId: 'current',
+    })
+  })
+
   it('returns invalid-credentials when the email does not exist', async () => {
     const { adminAccount, service, users } = createTestService()
 
@@ -177,13 +255,23 @@ describe('accounts service verification flow', () => {
     expect(users.list).not.toHaveBeenCalled()
   })
 
-  it('completes email verification and creates the verified user profile row', async () => {
+  it('completes email verification when the user profile row is already provisioned', async () => {
     const { authAccount, service, tablesDB, users } = createTestService()
 
     authAccount.updateEmailVerification.mockResolvedValue({})
     users.get.mockResolvedValue(createUser())
-    tablesDB.listRows.mockResolvedValue({ rows: [], total: 0 })
-    tablesDB.createRow.mockResolvedValue({
+    tablesDB.listRows.mockResolvedValue({
+      rows: [
+        {
+          $id: 'profile-1',
+          user_id: 'user-1',
+          full_name: 'Faculty User',
+          role: 'faculty',
+        },
+      ],
+      total: 1,
+    })
+    tablesDB.updateRow.mockResolvedValue({
       $id: 'profile-1',
       user_id: 'user-1',
       full_name: 'Faculty User',
@@ -199,15 +287,24 @@ describe('accounts service verification flow', () => {
       message: 'Email verified successfully. You can now sign in.',
     })
 
-    expect(tablesDB.createRow).toHaveBeenCalledWith({
-      databaseId: 'main',
-      tableId: 'user_profiles',
-      rowId: expect.any(String),
-      data: {
-        user_id: 'user-1',
-        full_name: 'Faculty User',
-        role: 'faculty',
-      },
+    expect(tablesDB.createRow).not.toHaveBeenCalled()
+    expect(tablesDB.updateRow).not.toHaveBeenCalled()
+  })
+
+  it('requires a provisioned user profile row during email verification', async () => {
+    const { authAccount, service, users } = createTestService()
+
+    authAccount.updateEmailVerification.mockResolvedValue({})
+    users.get.mockResolvedValue(createUser())
+
+    await expect(
+      service.completeEmailVerification({
+        userId: 'user-1',
+        secret: 'verification-secret',
+      }),
+    ).rejects.toMatchObject({
+      code: 'ACCOUNT_ROLE_MISSING',
+      statusCode: 403,
     })
   })
 
@@ -218,6 +315,50 @@ describe('accounts service verification flow', () => {
     sessionAccount.deleteSession.mockResolvedValue({})
 
     await expect(service.getCurrentAccount('temp-session-secret')).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+      statusCode: 401,
+    })
+
+    expect(sessionAccount.deleteSession).toHaveBeenCalledWith({
+      sessionId: 'current',
+    })
+  })
+
+  it('uses the mirrored user profile role for the current authenticated account', async () => {
+    const { service, sessionAccount, tablesDB } = createTestService()
+
+    sessionAccount.get.mockResolvedValue(
+      createUser({
+        labels: ['faculty'],
+        prefs: { role: 'faculty' },
+      }),
+    )
+    tablesDB.listRows.mockResolvedValue({
+      rows: [
+        {
+          $id: 'profile-1',
+          user_id: 'user-1',
+          full_name: 'Faculty User',
+          role: 'panelist',
+        },
+      ],
+      total: 1,
+    })
+
+    await expect(service.getCurrentAccount('active-session-secret')).resolves.toMatchObject({
+      role: 'panelist',
+    })
+
+    expect(tablesDB.updateRow).not.toHaveBeenCalled()
+  })
+
+  it('treats a missing user_profiles role as unauthenticated for current sessions', async () => {
+    const { service, sessionAccount } = createTestService()
+
+    sessionAccount.get.mockResolvedValue(createUser())
+    sessionAccount.deleteSession.mockResolvedValue({})
+
+    await expect(service.getCurrentAccount('active-session-secret')).rejects.toMatchObject({
       code: 'UNAUTHORIZED',
       statusCode: 401,
     })

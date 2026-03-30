@@ -17,29 +17,48 @@ function PanelistRouteLayout() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
+  const searchStr = useRouterState({
+    select: (state) => state.location.searchStr,
+  })
 
   return (
     <PanelistWorkspaceShell
       account={account}
-      activeSection={getActiveSection(pathname)}
+      activeSection={getActiveSection({
+        pathname,
+        searchStr,
+      })}
     >
       <Outlet />
     </PanelistWorkspaceShell>
   )
 }
 
-function getActiveSection(pathname: string): PanelistWorkspaceSection {
-  if (pathname === '/panelist/reviews') {
-    return 'reviews'
-  }
-
-  if (pathname === '/panelist/decisions') {
-    return 'decisions'
+function getActiveSection({
+  pathname,
+  searchStr,
+}: {
+  pathname: string
+  searchStr: string
+}): PanelistWorkspaceSection {
+  if (pathname === '/panelist/documents') {
+    return 'documents'
   }
 
   if (pathname === '/panelist/chat') {
     return 'chat'
   }
 
-  return 'overview'
+  if (pathname === '/panelist/applications') {
+    return 'application'
+  }
+
+  const params = new URLSearchParams(searchStr)
+  const view = params.get('view')
+
+  if (view === 'application' || view === 'account-setting') {
+    return view
+  }
+
+  return 'dashboard'
 }

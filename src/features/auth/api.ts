@@ -88,6 +88,10 @@ function getReadableAuthErrorMessage({
     return 'Your account has been temporarily suspended. Please contact support.'
   }
 
+  if (code === 'ACCOUNT_ROLE_MISSING') {
+    return 'Your account does not have an assigned application role. Please contact support.'
+  }
+
   if (code === 'RATE_LIMITED') {
     return 'Please wait a moment before trying again.'
   }

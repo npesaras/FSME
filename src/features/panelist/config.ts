@@ -3,23 +3,23 @@ import type { WorkspaceLink } from '../shared/workspace-links'
 export const panelistScopeLinks: WorkspaceLink[] = [
   {
     label: 'Panelist feature',
-    title: 'Review queue',
+    title: 'Applications',
     description:
-      'Filter submitted applications, inspect requirements, and prepare recommendations in a review-oriented queue.',
-    to: '/panelist/reviews',
+      'Review submitted applications, organize supporting context, and prepare recommendation-ready cases.',
+    to: '/panelist/applications',
   },
   {
     label: 'Panelist feature',
-    title: 'Decision recording',
+    title: 'Documents',
     description:
-      'Capture recommendation outcomes, rationale, and next steps once panel review is complete.',
-    to: '/panelist/decisions',
+      'Inspect uploaded supporting documents and track remarks tied to the current review workload.',
+    to: '/panelist/documents',
   },
   {
     label: 'Shared feature',
     title: 'Chat workspace',
     description:
-      'Jump into the shared CometChat workspace for follow-ups, coordination, and reviewer conversations.',
+      'Coordinate with fellow reviewers and workflow stakeholders from the shared CometChat workspace.',
     to: '/panelist/chat',
   },
 ]

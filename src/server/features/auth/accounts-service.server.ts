@@ -20,12 +20,6 @@ type AccountsServiceDependencies = {
     list: (options: { queries?: string[] }) => Promise<{ users: AppwriteUser[] }>
     get: (options: { userId: string }) => Promise<AppwriteUser>
     delete: (options: { userId: string }) => Promise<unknown>
-    updateStatus: (options: { userId: string; status: boolean }) => Promise<AppwriteUser>
-    updateLabels: (options: { userId: string; labels: string[] }) => Promise<AppwriteUser>
-    updatePrefs: (options: {
-      userId: string
-      prefs: Record<string, unknown>
-    }) => Promise<AppwriteUser>
   }
   createAdminAccount: () => {
     createEmailPasswordSession: (options: {
@@ -155,34 +149,12 @@ function normalizeRole(role: unknown): AuthRole | null {
   return APP_ROLES.includes(normalizedRole as AuthRole) ? (normalizedRole as AuthRole) : null
 }
 
-function getAppRoleLabels(user: AppwriteUser) {
-  return Array.isArray(user.labels)
-    ? user.labels.filter((label): label is AuthRole => APP_ROLES.includes(label as AuthRole))
-    : []
-}
-
-function getAppRole(user: AppwriteUser): AuthRole {
-  const labelRole = getAppRoleLabels(user)[0]
-
-  if (labelRole) {
-    return labelRole
-  }
-
-  const prefsRole = normalizeRole(user.prefs?.role)
-
-  if (prefsRole) {
-    return prefsRole
-  }
-
-  return DEFAULT_APP_ROLE
-}
-
-function toPublicAccount(user: AppwriteUser): AuthAccount {
+function toPublicAccount(user: AppwriteUser, role: AuthRole): AuthAccount {
   return {
     id: user.$id,
     name: user.name,
     email: user.email,
-    role: getAppRole(user),
+    role,
     status: user.status ? 'active' : 'disabled',
     lastSignInAt: user.accessedAt || null,
     emailVerified: user.emailVerification,
@@ -268,54 +240,35 @@ export function createAccountsService({
     })
   }
 
-  async function syncAppRoleMetadata(user: AppwriteUser) {
-    const targetRole = getAppRole(user)
-    const existingLabels = Array.isArray(user.labels) ? user.labels : []
-    const nonRoleLabels = existingLabels.filter((label) => !APP_ROLES.includes(label as AuthRole))
-    const nextLabels = [...nonRoleLabels, targetRole]
-    const hasMatchingLabels =
-      existingLabels.length === nextLabels.length &&
-      existingLabels.every((label, index) => label === nextLabels[index])
-    const existingPrefs =
-      user.prefs && typeof user.prefs === 'object' && !Array.isArray(user.prefs)
-        ? user.prefs
-        : {}
-    const hasMatchingPrefs = existingPrefs.role === targetRole
-
-    if (hasMatchingLabels && hasMatchingPrefs) {
-      return {
-        ...user,
-        labels: nextLabels,
-        prefs: existingPrefs,
-      }
-    }
-
-    await Promise.all([
-      hasMatchingLabels
-        ? Promise.resolve()
-        : users.updateLabels({
-            userId: user.$id,
-            labels: nextLabels,
-          }),
-      hasMatchingPrefs
-        ? Promise.resolve()
-        : users.updatePrefs({
-            userId: user.$id,
-            prefs: {
-              ...existingPrefs,
-              role: targetRole,
-            },
-          }),
-    ])
-
-    return {
-      ...user,
-      labels: nextLabels,
-      prefs: {
-        ...existingPrefs,
-        role: targetRole,
+  function createRoleAssignmentError() {
+    return new AppError(
+      403,
+      'Your account does not have an assigned application role. Please contact support.',
+      {
+        code: 'ACCOUNT_ROLE_MISSING',
       },
+    )
+  }
+
+  async function getProfileRoleOrNull(userId: string): Promise<AuthRole | null> {
+    const profile = await userProfiles.findByUserId(userId)
+    const profileRole = normalizeRole(profile?.role)
+
+    if (profileRole) {
+      return profileRole
     }
+
+    return null
+  }
+
+  async function getRequiredProfileRole(userId: string): Promise<AuthRole> {
+    const profileRole = await getProfileRoleOrNull(userId)
+
+    if (profileRole) {
+      return profileRole
+    }
+
+    throw createRoleAssignmentError()
   }
 
   async function findAuthUserByEmail(email: string) {
@@ -380,7 +333,7 @@ export function createAccountsService({
     email: string
     password: string
     origin: string
-  }) {
+    }) {
     const normalizedEmail = normalizeEmail(email)
     let session
 
@@ -420,9 +373,8 @@ export function createAccountsService({
 
     const sessionAccount = createSessionAccount(session.secret)
     const user = await sessionAccount.get()
-    const syncedUser = await syncAppRoleMetadata(user)
 
-    if (!syncedUser.emailVerification) {
+    if (!user.emailVerification) {
       let verificationError: unknown = null
 
       try {
@@ -448,20 +400,29 @@ export function createAccountsService({
       )
     }
 
+    let role: AuthRole
+
+    try {
+      role = await getRequiredProfileRole(user.$id)
+    } catch (error) {
+      await deleteCurrentSession(sessionAccount)
+      throw error
+    }
+
     await userProfiles.upsertVerifiedProfile({
-      userId: syncedUser.$id,
-      fullName: normalizeName(syncedUser.name),
-      role: getAppRole(syncedUser),
+      userId: user.$id,
+      fullName: normalizeName(user.name),
+      role,
     })
 
     return {
-      account: toPublicAccount(syncedUser),
+      account: toPublicAccount(user, role),
       session: {
         secret: session.secret,
         expire: session.expire,
       },
       sessionAccount,
-      user: syncedUser,
+      user,
     }
   }
 
@@ -514,7 +475,11 @@ export function createAccountsService({
           password,
           name: normalizedName,
         })
-        const syncedUser = await syncAppRoleMetadata(createdUser)
+        await userProfiles.upsertVerifiedProfile({
+          userId: createdUser.$id,
+          fullName: normalizedName,
+          role: DEFAULT_APP_ROLE,
+        })
         const session = await createAdminAccount().createEmailPasswordSession({
           email: normalizedEmail,
           password,
@@ -540,7 +505,7 @@ export function createAccountsService({
 
         return {
           email: normalizedEmail,
-          message: `We sent a verification email to ${syncedUser.email}. Verify your account before signing in.`,
+          message: `We sent a verification email to ${createdUser.email}. Verify your account before signing in.`,
           verificationRequired: true,
         }
       } catch (error) {
@@ -606,16 +571,15 @@ export function createAccountsService({
         throw error
       }
 
-      const verifiedUser = await syncAppRoleMetadata(
-        (await users.get({
-          userId,
-        })) as AppwriteUser
-      )
+      const verifiedUser = (await users.get({
+        userId,
+      })) as AppwriteUser
+      const role = await getRequiredProfileRole(verifiedUser.$id)
 
       await userProfiles.upsertVerifiedProfile({
         userId: verifiedUser.$id,
         fullName: normalizeName(verifiedUser.name),
-        role: getAppRole(verifiedUser),
+        role,
       })
 
       return {
@@ -702,9 +666,8 @@ export function createAccountsService({
 
     async getCurrentAccount(sessionSecret: string) {
       const { account, user } = await getAccountBySessionSecret(sessionSecret)
-      const syncedUser = await syncAppRoleMetadata(user)
 
-      if (!syncedUser.emailVerification) {
+      if (!user.emailVerification) {
         await deleteCurrentSession(account)
 
         throw new AppError(401, 'Authentication required.', {
@@ -712,13 +675,29 @@ export function createAccountsService({
         })
       }
 
+      let role: AuthRole
+
+      try {
+        role = await getRequiredProfileRole(user.$id)
+      } catch (error) {
+        await deleteCurrentSession(account)
+
+        if (error instanceof AppError && error.code === 'ACCOUNT_ROLE_MISSING') {
+          throw new AppError(401, 'Authentication required.', {
+            code: 'UNAUTHORIZED',
+          })
+        }
+
+        throw error
+      }
+
       await userProfiles.upsertVerifiedProfile({
-        userId: syncedUser.$id,
-        fullName: normalizeName(syncedUser.name),
-        role: getAppRole(syncedUser),
+        userId: user.$id,
+        fullName: normalizeName(user.name),
+        role,
       })
 
-      return toPublicAccount(syncedUser)
+      return toPublicAccount(user, role)
     },
 
     async signOut(sessionSecret: string): Promise<AuthMessageResponse> {
@@ -762,7 +741,17 @@ export function createAccountsService({
     async getById(accountId: string) {
       const user = await getAuthUserById(accountId)
 
-      return user ? toPublicAccount(await syncAppRoleMetadata(user)) : null
+      if (!user) {
+        return null
+      }
+
+      const role = await getProfileRoleOrNull(user.$id)
+
+      if (!role) {
+        return null
+      }
+
+      return toPublicAccount(user, role)
     },
   }
 }

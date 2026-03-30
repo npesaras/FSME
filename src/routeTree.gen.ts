@@ -14,9 +14,10 @@ import { Route as FacultyRouteRouteImport } from './routes/faculty/route'
 import { Route as PanelistIndexRouteImport } from './routes/panelist/index'
 import { Route as FacultyIndexRouteImport } from './routes/faculty/index'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
-import { Route as PanelistReviewsRouteImport } from './routes/panelist/reviews'
+import { Route as PanelistDocumentsRouteImport } from './routes/panelist/documents'
 import { Route as PanelistDecisionsRouteImport } from './routes/panelist/decisions'
 import { Route as PanelistChatRouteImport } from './routes/panelist/chat'
+import { Route as PanelistApplicationsRouteImport } from './routes/panelist/applications'
 import { Route as FacultyDocumentsRouteImport } from './routes/faculty/documents'
 import { Route as FacultyChatRouteImport } from './routes/faculty/chat'
 import { Route as FacultyApplicationsRouteImport } from './routes/faculty/applications'
@@ -64,9 +65,9 @@ const publicIndexRoute = publicIndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PanelistReviewsRoute = PanelistReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
+const PanelistDocumentsRoute = PanelistDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => PanelistRouteRoute,
 } as any)
 const PanelistDecisionsRoute = PanelistDecisionsRouteImport.update({
@@ -77,6 +78,11 @@ const PanelistDecisionsRoute = PanelistDecisionsRouteImport.update({
 const PanelistChatRoute = PanelistChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => PanelistRouteRoute,
+} as any)
+const PanelistApplicationsRoute = PanelistApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
   getParentRoute: () => PanelistRouteRoute,
 } as any)
 const FacultyDocumentsRoute = FacultyDocumentsRouteImport.update({
@@ -198,9 +204,10 @@ export interface FileRoutesByFullPath {
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
-  '/panelist/reviews': typeof PanelistReviewsRoute
+  '/panelist/documents': typeof PanelistDocumentsRoute
   '/': typeof publicIndexRoute
   '/faculty/': typeof FacultyIndexRoute
   '/panelist/': typeof PanelistIndexRoute
@@ -227,9 +234,10 @@ export interface FileRoutesByTo {
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
-  '/panelist/reviews': typeof PanelistReviewsRoute
+  '/panelist/documents': typeof PanelistDocumentsRoute
   '/': typeof publicIndexRoute
   '/faculty': typeof FacultyIndexRoute
   '/panelist': typeof PanelistIndexRoute
@@ -259,9 +267,10 @@ export interface FileRoutesById {
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
+  '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
   '/panelist/decisions': typeof PanelistDecisionsRoute
-  '/panelist/reviews': typeof PanelistReviewsRoute
+  '/panelist/documents': typeof PanelistDocumentsRoute
   '/(public)/': typeof publicIndexRoute
   '/faculty/': typeof FacultyIndexRoute
   '/panelist/': typeof PanelistIndexRoute
@@ -292,9 +301,10 @@ export interface FileRouteTypes {
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/applications'
     | '/panelist/chat'
     | '/panelist/decisions'
-    | '/panelist/reviews'
+    | '/panelist/documents'
     | '/'
     | '/faculty/'
     | '/panelist/'
@@ -321,9 +331,10 @@ export interface FileRouteTypes {
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/applications'
     | '/panelist/chat'
     | '/panelist/decisions'
-    | '/panelist/reviews'
+    | '/panelist/documents'
     | '/'
     | '/faculty'
     | '/panelist'
@@ -352,9 +363,10 @@ export interface FileRouteTypes {
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
+    | '/panelist/applications'
     | '/panelist/chat'
     | '/panelist/decisions'
-    | '/panelist/reviews'
+    | '/panelist/documents'
     | '/(public)/'
     | '/faculty/'
     | '/panelist/'
@@ -432,11 +444,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/panelist/reviews': {
-      id: '/panelist/reviews'
-      path: '/reviews'
-      fullPath: '/panelist/reviews'
-      preLoaderRoute: typeof PanelistReviewsRouteImport
+    '/panelist/documents': {
+      id: '/panelist/documents'
+      path: '/documents'
+      fullPath: '/panelist/documents'
+      preLoaderRoute: typeof PanelistDocumentsRouteImport
       parentRoute: typeof PanelistRouteRoute
     }
     '/panelist/decisions': {
@@ -451,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/panelist/chat'
       preLoaderRoute: typeof PanelistChatRouteImport
+      parentRoute: typeof PanelistRouteRoute
+    }
+    '/panelist/applications': {
+      id: '/panelist/applications'
+      path: '/applications'
+      fullPath: '/panelist/applications'
+      preLoaderRoute: typeof PanelistApplicationsRouteImport
       parentRoute: typeof PanelistRouteRoute
     }
     '/faculty/documents': {
@@ -622,16 +641,18 @@ const FacultyRouteRouteWithChildren = FacultyRouteRoute._addFileChildren(
 )
 
 interface PanelistRouteRouteChildren {
+  PanelistApplicationsRoute: typeof PanelistApplicationsRoute
   PanelistChatRoute: typeof PanelistChatRoute
   PanelistDecisionsRoute: typeof PanelistDecisionsRoute
-  PanelistReviewsRoute: typeof PanelistReviewsRoute
+  PanelistDocumentsRoute: typeof PanelistDocumentsRoute
   PanelistIndexRoute: typeof PanelistIndexRoute
 }
 
 const PanelistRouteRouteChildren: PanelistRouteRouteChildren = {
+  PanelistApplicationsRoute: PanelistApplicationsRoute,
   PanelistChatRoute: PanelistChatRoute,
   PanelistDecisionsRoute: PanelistDecisionsRoute,
-  PanelistReviewsRoute: PanelistReviewsRoute,
+  PanelistDocumentsRoute: PanelistDocumentsRoute,
   PanelistIndexRoute: PanelistIndexRoute,
 }
 

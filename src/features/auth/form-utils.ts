@@ -1,4 +1,5 @@
 import { useCallback, useRef, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { AuthApiError } from './api'
 
 export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -69,6 +70,16 @@ export function validateAcceptedTerms(value: boolean) {
 
 export function getAuthPageErrorMessage(error: unknown, fallbackMessage: string) {
   return error instanceof AuthApiError ? error.message : fallbackMessage
+}
+
+export function showAuthErrorToast(options: {
+  error: unknown
+  fallbackMessage: string
+  id: string
+}) {
+  toast.error(getAuthPageErrorMessage(options.error, options.fallbackMessage), {
+    id: options.id,
+  })
 }
 
 export function useGuardedFormSubmit(handleSubmit: () => Promise<unknown>) {

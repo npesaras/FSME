@@ -6,9 +6,6 @@ export const authDividerLineClassName = 'w-full border-t border-border/70'
 export const authDividerTextClassName =
   'bg-card px-4 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground/90'
 
-export const authAlertClassName =
-  'rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive'
-
 export const authBodyTextClassName = 'text-sm leading-relaxed text-muted-foreground'
 
 export const authFieldLabelClassName = 'text-sm font-semibold text-foreground'

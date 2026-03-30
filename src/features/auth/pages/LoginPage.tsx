@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail } from 'lucide-react'
+import { toast } from 'sonner'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
-  authAlertClassName,
   authCheckboxClassName,
   authCheckboxLabelClassName,
   authDividerLineClassName,
@@ -21,20 +21,21 @@ import {
 } from '../components/authClassNames'
 import { signIn } from '../api'
 import {
-  getAuthPageErrorMessage,
   normalizeEmailInput,
+  showAuthErrorToast,
   useGuardedFormSubmit,
   validateEmailInput,
   validateRequiredPassword,
 } from '../form-utils'
 import { getDefaultAuthenticatedPath } from '../session'
 
+const loginErrorToastId = 'auth-login-error'
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const clearSubmitError = useCallback(() => {
-    setSubmitError((current) => (current ? null : current))
+    toast.dismiss(loginErrorToastId)
   }, [])
   const form = useForm({
     defaultValues: {
@@ -57,7 +58,11 @@ export default function LoginPage() {
           replace: true,
         })
       } catch (error) {
-        setSubmitError(getAuthPageErrorMessage(error, 'Unable to sign in right now. Please try again.'))
+        showAuthErrorToast({
+          error,
+          fallbackMessage: 'Unable to sign in right now. Please try again.',
+          id: loginErrorToastId,
+        })
       }
     },
   })
@@ -108,12 +113,6 @@ export default function LoginPage() {
         onSubmit={handleFormSubmit}
         className="space-y-5"
       >
-        {submitError ? (
-          <div className={authAlertClassName}>
-            {submitError}
-          </div>
-        ) : null}
-
         <form.Field
           name="email"
           validators={{

@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail, User } from 'lucide-react'
+import { toast } from 'sonner'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
-  authAlertClassName,
   authCompactCheckboxClassName,
   authCompactCheckboxLabelClassName,
   authCompactErrorTextClassName,
@@ -20,9 +20,9 @@ import {
 } from '../components/authClassNames'
 import { signUp } from '../api'
 import {
-  getAuthPageErrorMessage,
   normalizeEmailInput,
   normalizeNameInput,
+  showAuthErrorToast,
   useGuardedFormSubmit,
   validateAcceptedTerms,
   validateEmailInput,
@@ -31,13 +31,14 @@ import {
   validateRequiredPassword,
 } from '../form-utils'
 
+const signupErrorToastId = 'auth-signup-error'
+
 export default function SignupPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const clearSubmitError = useCallback(() => {
-    setSubmitError((current) => (current ? null : current))
+    toast.dismiss(signupErrorToastId)
   }, [])
   const form = useForm({
     defaultValues: {
@@ -70,7 +71,12 @@ export default function SignupPage() {
           replace: true,
         })
       } catch (error) {
-        setSubmitError(getAuthPageErrorMessage(error, 'Unable to create your account right now. Please try again.'))
+        showAuthErrorToast({
+          error,
+          fallbackMessage:
+            'Unable to create your account right now. Please try again.',
+          id: signupErrorToastId,
+        })
       }
     },
   })
@@ -121,12 +127,6 @@ export default function SignupPage() {
         onSubmit={handleFormSubmit}
         className="space-y-4"
       >
-        {submitError ? (
-          <div className={authAlertClassName}>
-            {submitError}
-          </div>
-        ) : null}
-
         <form.Field
           name="name"
           validators={{

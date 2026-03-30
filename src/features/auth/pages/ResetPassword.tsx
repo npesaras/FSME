@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, ShieldAlert } from 'lucide-react'
+import { toast } from 'sonner'
 import { AuthApiError, resetPassword } from '../api'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
-  authAlertClassName,
   authBodyTextClassName,
   authErrorTextClassName,
   authFieldLabelClassName,
@@ -17,6 +17,7 @@ import {
 } from '../components/authClassNames'
 
 const resetPasswordRoute = getRouteApi('/(public)/reset-password')
+const resetPasswordErrorToastId = 'auth-reset-password-error'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -24,7 +25,6 @@ export default function ResetPasswordPage() {
   const hasRecoveryLink = Boolean(userId && secret)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const form = useForm({
     defaultValues: {
       password: '',
@@ -32,12 +32,14 @@ export default function ResetPasswordPage() {
     },
     onSubmit: async ({ value }) => {
       if (!hasRecoveryLink) {
-        setSubmitError('This password reset link is invalid or has expired.')
+        toast.error('This password reset link is invalid or has expired.', {
+          id: resetPasswordErrorToastId,
+        })
         return
       }
 
       try {
-        setSubmitError(null)
+        toast.dismiss(resetPasswordErrorToastId)
 
         await resetPassword({
           userId,
@@ -49,10 +51,13 @@ export default function ResetPasswordPage() {
           to: '/reset-success',
         })
       } catch (error) {
-        setSubmitError(
+        toast.error(
           error instanceof AuthApiError
             ? error.message
-            : 'Unable to reset your password right now. Please try again.'
+            : 'Unable to reset your password right now. Please try again.',
+          {
+            id: resetPasswordErrorToastId,
+          },
         )
       }
     },
@@ -105,12 +110,6 @@ export default function ResetPasswordPage() {
         }}
         className="space-y-4"
       >
-        {submitError ? (
-          <div className={authAlertClassName}>
-            {submitError}
-          </div>
-        ) : null}
-
         <form.Field
           name="password"
           validators={{
@@ -139,7 +138,10 @@ export default function ResetPasswordPage() {
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      toast.dismiss(resetPasswordErrorToastId)
+                      field.handleChange(event.target.value)
+                    }}
                     className={authInputClassName}
                     placeholder="Enter your new password"
                   />
@@ -196,7 +198,10 @@ export default function ResetPasswordPage() {
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      toast.dismiss(resetPasswordErrorToastId)
+                      field.handleChange(event.target.value)
+                    }}
                     className={authInputClassName}
                     placeholder="Confirm your new password"
                   />

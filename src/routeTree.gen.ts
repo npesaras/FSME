@@ -15,7 +15,6 @@ import { Route as PanelistIndexRouteImport } from './routes/panelist/index'
 import { Route as FacultyIndexRouteImport } from './routes/faculty/index'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
 import { Route as PanelistDocumentsRouteImport } from './routes/panelist/documents'
-import { Route as PanelistDecisionsRouteImport } from './routes/panelist/decisions'
 import { Route as PanelistChatRouteImport } from './routes/panelist/chat'
 import { Route as PanelistApplicationsRouteImport } from './routes/panelist/applications'
 import { Route as FacultyDocumentsRouteImport } from './routes/faculty/documents'
@@ -68,11 +67,6 @@ const publicIndexRoute = publicIndexRouteImport.update({
 const PanelistDocumentsRoute = PanelistDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
-  getParentRoute: () => PanelistRouteRoute,
-} as any)
-const PanelistDecisionsRoute = PanelistDecisionsRouteImport.update({
-  id: '/decisions',
-  path: '/decisions',
   getParentRoute: () => PanelistRouteRoute,
 } as any)
 const PanelistChatRoute = PanelistChatRouteImport.update({
@@ -206,7 +200,6 @@ export interface FileRoutesByFullPath {
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
-  '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/documents': typeof PanelistDocumentsRoute
   '/': typeof publicIndexRoute
   '/faculty/': typeof FacultyIndexRoute
@@ -236,7 +229,6 @@ export interface FileRoutesByTo {
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
-  '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/documents': typeof PanelistDocumentsRoute
   '/': typeof publicIndexRoute
   '/faculty': typeof FacultyIndexRoute
@@ -269,7 +261,6 @@ export interface FileRoutesById {
   '/faculty/documents': typeof FacultyDocumentsRoute
   '/panelist/applications': typeof PanelistApplicationsRoute
   '/panelist/chat': typeof PanelistChatRoute
-  '/panelist/decisions': typeof PanelistDecisionsRoute
   '/panelist/documents': typeof PanelistDocumentsRoute
   '/(public)/': typeof publicIndexRoute
   '/faculty/': typeof FacultyIndexRoute
@@ -303,7 +294,6 @@ export interface FileRouteTypes {
     | '/faculty/documents'
     | '/panelist/applications'
     | '/panelist/chat'
-    | '/panelist/decisions'
     | '/panelist/documents'
     | '/'
     | '/faculty/'
@@ -333,7 +323,6 @@ export interface FileRouteTypes {
     | '/faculty/documents'
     | '/panelist/applications'
     | '/panelist/chat'
-    | '/panelist/decisions'
     | '/panelist/documents'
     | '/'
     | '/faculty'
@@ -365,7 +354,6 @@ export interface FileRouteTypes {
     | '/faculty/documents'
     | '/panelist/applications'
     | '/panelist/chat'
-    | '/panelist/decisions'
     | '/panelist/documents'
     | '/(public)/'
     | '/faculty/'
@@ -449,13 +437,6 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/panelist/documents'
       preLoaderRoute: typeof PanelistDocumentsRouteImport
-      parentRoute: typeof PanelistRouteRoute
-    }
-    '/panelist/decisions': {
-      id: '/panelist/decisions'
-      path: '/decisions'
-      fullPath: '/panelist/decisions'
-      preLoaderRoute: typeof PanelistDecisionsRouteImport
       parentRoute: typeof PanelistRouteRoute
     }
     '/panelist/chat': {
@@ -643,7 +624,6 @@ const FacultyRouteRouteWithChildren = FacultyRouteRoute._addFileChildren(
 interface PanelistRouteRouteChildren {
   PanelistApplicationsRoute: typeof PanelistApplicationsRoute
   PanelistChatRoute: typeof PanelistChatRoute
-  PanelistDecisionsRoute: typeof PanelistDecisionsRoute
   PanelistDocumentsRoute: typeof PanelistDocumentsRoute
   PanelistIndexRoute: typeof PanelistIndexRoute
 }
@@ -651,7 +631,6 @@ interface PanelistRouteRouteChildren {
 const PanelistRouteRouteChildren: PanelistRouteRouteChildren = {
   PanelistApplicationsRoute: PanelistApplicationsRoute,
   PanelistChatRoute: PanelistChatRoute,
-  PanelistDecisionsRoute: PanelistDecisionsRoute,
   PanelistDocumentsRoute: PanelistDocumentsRoute,
   PanelistIndexRoute: PanelistIndexRoute,
 }

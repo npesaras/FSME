@@ -6,10 +6,13 @@ import React, { useEffect, useState } from 'react';
 import { useCometChatContext } from './context/CometChatContext';
 import { CometChat } from '@cometchat/chat-sdk-javascript';
 import useSystemColorScheme from './customHooks';
-import { CometChatUIKit } from '@cometchat/chat-uikit-react';
 import '@cometchat/chat-uikit-react/css-variables.css';
 import useThemeStyles from './customHook/useThemeStyles';
 import { COMET_CHAT_LOGIN_LISTENER_ID } from '../../integration-metadata';
+import {
+  getCometChatUserAuthToken,
+  getVerifiedCometChatLoggedInUser,
+} from '#/features/shared/chat/session';
 
 interface CometChatAppProps {
   /** Default user for the chat application (optional). */
@@ -45,33 +48,41 @@ function CometChatApp({
    * Effect to handle login and logout listeners
    */
   useEffect(() => {
+    let cancelled = false;
+
+    const syncLoggedInUser = () => {
+      void getVerifiedCometChatLoggedInUser().then((user) => {
+        if (!cancelled) {
+          setLoggedInUser(user);
+        }
+      });
+    };
+
+    syncLoggedInUser();
+
     CometChat.addLoginListener(
       COMET_CHAT_LOGIN_LISTENER_ID,
       new CometChat.LoginListener({
         loginSuccess: (user: CometChat.User) => {
-          setLoggedInUser(user);
+          if (getCometChatUserAuthToken(user)) {
+            setLoggedInUser(user);
+            return;
+          }
+
+          syncLoggedInUser();
         },
         logoutSuccess: () => {
-          setLoggedInUser(null);
+          if (!cancelled) {
+            setLoggedInUser(null);
+          }
         },
       })
     );
 
-    return () => CometChat.removeLoginListener(COMET_CHAT_LOGIN_LISTENER_ID);
-  }, []);
-
-  /**
-   * Fetches the currently logged-in CometChat user and updates the state.
-   * Runs once on component mount.
-   */
-  useEffect(() => {
-    CometChatUIKit.getLoggedinUser().then((user: CometChat.User | null) => {
-      if (user) {
-        setLoggedInUser(user);
-      } else {
-        setLoggedInUser(null);
-      }
-    });
+    return () => {
+      cancelled = true;
+      CometChat.removeLoginListener(COMET_CHAT_LOGIN_LISTENER_ID);
+    };
   }, []);
 
   return (

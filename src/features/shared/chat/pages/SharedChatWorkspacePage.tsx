@@ -40,7 +40,7 @@ export default function SharedChatWorkspacePage({
         fallback={
           <ChatStatusPanel
             title="Starting chat workspace"
-            description="Initializing the CometChat UI kit and signing this workspace into the shared chat session."
+            description="Initializing the CometChat UI kit and preparing the authenticated chat workspace."
             bare={bare}
           />
         }
@@ -48,8 +48,8 @@ export default function SharedChatWorkspacePage({
         <Suspense
           fallback={
             <ChatStatusPanel
-              title="Loading shared chat"
-              description="Preparing the CometChat workspace and syncing the latest conversations for this role."
+              title="Loading chat workspace"
+              description="Preparing the CometChat workspace and syncing the latest conversations for this account."
               bare={bare}
             />
           }

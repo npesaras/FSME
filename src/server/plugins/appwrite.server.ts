@@ -57,6 +57,7 @@ export async function getAppwriteStatus() {
     projectId: config.appwrite.projectId,
     databaseId: config.appwrite.databaseId,
     userProfilesTableId: config.appwrite.userProfilesTableId,
+    cometUserProfilesTableId: config.appwrite.cometUserProfilesTableId,
     tables: {
       total: tables.total,
       ids: tables.tables.map((table: Models.Table) => table.$id),

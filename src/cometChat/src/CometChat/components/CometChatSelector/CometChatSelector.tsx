@@ -15,7 +15,6 @@ import {
   CometChatGroups,
   CometChatOption,
   CometChatUIKit,
-  CometChatUIKitLoginListener,
   CometChatUsers,
   getLocalizedString,
   CometChatContextMenu,
@@ -25,6 +24,10 @@ import { AppContext } from '../../context/AppContext';
 import { useCometChatContext } from '../../context/CometChatContext';
 import { CallLog } from '@cometchat/calls-sdk-javascript';
 import { CometChatSettings } from '../../CometChatSettings';
+import {
+  getCometChatUserAuthToken,
+  getVerifiedCometChatLoggedInUser,
+} from '#/features/shared/chat/session';
 
 interface SelectorProps {
   group?: CometChat.Group;
@@ -62,10 +65,9 @@ const CometChatSelector = (props: SelectorProps) => {
     hideCreateGroupButton = true,
   } = props;
 
-  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>();
+  const [loggedInUser, setLoggedInUser] = useState<CometChat.User | null>(null);
   const { setAppState } = useContext(AppContext);
   const { chatFeatures, callFeatures } = useCometChatContext();
-  const getLoggedInUser = CometChatUIKitLoginListener.getLoggedInUser();
 
   // Build usersRequestBuilder for users tab
   const usersRequestBuilder = React.useMemo(() => {
@@ -77,8 +79,43 @@ const CometChatSelector = (props: SelectorProps) => {
   }, [chatFeatures?.userManagement?.friendsOnly]);
 
   useEffect(() => {
-    setLoggedInUser(getLoggedInUser);
-  }, [getLoggedInUser]);
+    let cancelled = false;
+    const listenerID = `SelectorLoginListener_${Date.now()}`;
+
+    const syncLoggedInUser = () => {
+      void getVerifiedCometChatLoggedInUser().then((user) => {
+        if (!cancelled) {
+          setLoggedInUser(user);
+        }
+      });
+    };
+
+    syncLoggedInUser();
+
+    CometChat.addLoginListener(
+      listenerID,
+      new CometChat.LoginListener({
+        loginSuccess: (user: CometChat.User) => {
+          if (getCometChatUserAuthToken(user)) {
+            setLoggedInUser(user);
+            return;
+          }
+
+          syncLoggedInUser();
+        },
+        logoutSuccess: () => {
+          if (!cancelled) {
+            setLoggedInUser(null);
+          }
+        },
+      })
+    );
+
+    return () => {
+      cancelled = true;
+      CometChat.removeLoginListener(listenerID);
+    };
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'calls') {

@@ -1,30 +1,52 @@
 import { useEffect, useState } from 'react';
 
 /**
- * A custom hook that detects and returns the system's preferred color scheme.
+ * A custom hook that follows the app's active theme and falls back to the
+ * operating system preference when the app theme has not been initialized yet.
  *
- * @returns {'light' | 'dark'} The current system color scheme.
+ * @returns {'light' | 'dark'} The current active color scheme.
  */
 const useSystemColorScheme = (): 'light' | 'dark' => {
   const [colorScheme, setColorScheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Check the current system color scheme
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const root = document.documentElement;
 
-    // Set initial color scheme based on system preference
-    setColorScheme(mediaQuery.matches ? 'dark' : 'light');
+    const getActiveTheme = (): 'light' | 'dark' => {
+      const dataTheme = root.getAttribute('data-theme');
 
-    // Listen for changes to the color scheme preference
-    const handleChange = (e: MediaQueryListEvent) => {
-      setColorScheme(e.matches ? 'dark' : 'light');
+      if (dataTheme === 'light' || dataTheme === 'dark') {
+        return dataTheme;
+      }
+
+      if (root.classList.contains('dark')) {
+        return 'dark';
+      }
+
+      if (root.classList.contains('light')) {
+        return 'light';
+      }
+
+      return mediaQuery.matches ? 'dark' : 'light';
     };
 
-    mediaQuery.addEventListener('change', handleChange);
+    const updateColorScheme = () => {
+      setColorScheme(getActiveTheme());
+    };
 
-    // Clean up the listener when the component is unmounted
+    const observer = new MutationObserver(updateColorScheme);
+
+    updateColorScheme();
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+    mediaQuery.addEventListener('change', updateColorScheme);
+
     return () => {
-      mediaQuery.removeEventListener('change', handleChange);
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', updateColorScheme);
     };
   }, []);
 

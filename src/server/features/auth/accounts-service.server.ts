@@ -78,6 +78,8 @@ type AccountsServiceDependencies = {
   userProfilesTableId: string
   recoveryOrigins: string[]
   verificationOrigins: string[]
+  ensureCometChatProfile?: (account: Pick<AuthAccount, 'id' | 'name' | 'role'>) => Promise<unknown>
+  deleteCometChatProfile?: (userId: string) => Promise<unknown>
   logger?: ServerLogger
 }
 
@@ -95,6 +97,44 @@ function normalizeOrigin(origin: string) {
   } catch {
     return null
   }
+}
+
+function getErrorSummary(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'string' && error.trim()) {
+    return error.trim()
+  }
+
+  if (error && typeof error === 'object') {
+    const candidate = error as Record<string, unknown>
+    const nestedData =
+      candidate.data && typeof candidate.data === 'object'
+        ? (candidate.data as Record<string, unknown>)
+        : null
+    const message = [
+      typeof candidate.message === 'string' ? candidate.message : null,
+      typeof nestedData?.message === 'string' ? nestedData.message : null,
+      typeof candidate.code === 'string' ? `code: ${candidate.code}` : null,
+      typeof candidate.statusCode === 'number' ? `status: ${candidate.statusCode}` : null,
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
+    if (message) {
+      return message
+    }
+
+    try {
+      return JSON.stringify(candidate)
+    } catch {
+      return 'Unknown error'
+    }
+  }
+
+  return 'Unknown error'
 }
 
 function isAppwriteErrorWithCode(error: unknown, expectedCode: number) {
@@ -173,6 +213,8 @@ export function createAccountsService({
   userProfilesTableId,
   recoveryOrigins,
   verificationOrigins,
+  ensureCometChatProfile,
+  deleteCometChatProfile,
   logger,
 }: AccountsServiceDependencies) {
   const userProfiles = createUserProfilesRepository({
@@ -445,6 +487,26 @@ export function createAccountsService({
     }
   }
 
+  async function ensureCometChatProfileForAccount(account: Pick<AuthAccount, 'id' | 'name' | 'role'>) {
+    if (!ensureCometChatProfile) {
+      return
+    }
+
+    try {
+      await ensureCometChatProfile(account)
+    } catch (error) {
+      logger?.warn?.(
+        {
+          userId: account.id,
+          role: account.role,
+          error,
+          errorSummary: getErrorSummary(error),
+        },
+        'CometChat profile provisioning failed during auth flow. The account will remain usable and chat can retry later.',
+      )
+    }
+  }
+
   return {
     async signUp({
       name,
@@ -478,6 +540,11 @@ export function createAccountsService({
         await userProfiles.upsertVerifiedProfile({
           userId: createdUser.$id,
           fullName: normalizedName,
+          role: DEFAULT_APP_ROLE,
+        })
+        await ensureCometChatProfileForAccount({
+          id: createdUser.$id,
+          name: normalizedName,
           role: DEFAULT_APP_ROLE,
         })
         const session = await createAdminAccount().createEmailPasswordSession({
@@ -535,6 +602,8 @@ export function createAccountsService({
       origin: string
     }): Promise<AuthSession & { session: { secret: string; expire: string } }> {
       const { account, session } = await createSessionForCredentials({ email, password, origin })
+
+      await ensureCometChatProfileForAccount(account)
 
       return {
         account,
@@ -665,10 +734,10 @@ export function createAccountsService({
     },
 
     async getCurrentAccount(sessionSecret: string) {
-      const { account, user } = await getAccountBySessionSecret(sessionSecret)
+      const { account: sessionAccount, user } = await getAccountBySessionSecret(sessionSecret)
 
       if (!user.emailVerification) {
-        await deleteCurrentSession(account)
+        await deleteCurrentSession(sessionAccount)
 
         throw new AppError(401, 'Authentication required.', {
           code: 'UNAUTHORIZED',
@@ -680,7 +749,7 @@ export function createAccountsService({
       try {
         role = await getRequiredProfileRole(user.$id)
       } catch (error) {
-        await deleteCurrentSession(account)
+        await deleteCurrentSession(sessionAccount)
 
         if (error instanceof AppError && error.code === 'ACCOUNT_ROLE_MISSING') {
           throw new AppError(401, 'Authentication required.', {
@@ -696,8 +765,11 @@ export function createAccountsService({
         fullName: normalizeName(user.name),
         role,
       })
+      const publicAccount = toPublicAccount(user, role)
 
-      return toPublicAccount(user, role)
+      await ensureCometChatProfileForAccount(publicAccount)
+
+      return publicAccount
     },
 
     async signOut(sessionSecret: string): Promise<AuthMessageResponse> {
@@ -712,6 +784,12 @@ export function createAccountsService({
       const { user } = await getAccountBySessionSecret(sessionSecret)
 
       await deleteMirroredProfile(user.$id)
+      await deleteCometChatProfile?.(user.$id).catch((error) => {
+        logger?.warn?.(
+          { userId: user.$id, error },
+          'CometChat profile mirror cleanup failed during account deletion. Continuing with Appwrite user deletion.',
+        )
+      })
 
       try {
         await users.delete({

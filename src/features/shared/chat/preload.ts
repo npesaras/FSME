@@ -5,8 +5,15 @@ const chatPreloadPromises = new Map<ChatActor, Promise<void>>()
 async function warmChatWorkspace(actor: ChatActor) {
   await import('./components/CometChatWorkspacePanel')
 
-  const [{ getCometChatRoleConfig }, { ensureCometChatRoleSession }] =
-    await Promise.all([import('./config'), import('./runtime')])
+  const [
+    { getCometChatRoleConfig },
+    { getCurrentCometChatProfileServerFn },
+    { ensureCometChatRoleSession },
+  ] = await Promise.all([
+    import('./config'),
+    import('./profile.functions'),
+    import('./runtime'),
+  ])
 
   const config = getCometChatRoleConfig(actor)
 
@@ -14,7 +21,12 @@ async function warmChatWorkspace(actor: ChatActor) {
     return
   }
 
-  await ensureCometChatRoleSession(config)
+  const profile = await getCurrentCometChatProfileServerFn()
+
+  await ensureCometChatRoleSession({
+    ...config,
+    uid: profile.uid,
+  })
 }
 
 export function preloadChatWorkspace(actor: ChatActor) {

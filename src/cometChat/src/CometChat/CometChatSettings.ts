@@ -77,13 +77,13 @@
     "chatType": "user"
   },
   "style": {
-    "theme": "light",
+    "theme": "system",
     "color": {
-      "brandColor": "#22af5b",
+      "brandColor": "#1e847c",
       "primaryTextLight": "#141414",
-      "primaryTextDark": "#FFFFFF",
-      "secondaryTextLight": "#727272",
-      "secondaryTextDark": "#989898"
+      "primaryTextDark": "#FAFAFA",
+      "secondaryTextLight": "#717182",
+      "secondaryTextDark": "#B9BCC6"
     },
     "typography": {
       "font": "inter",

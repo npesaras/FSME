@@ -8,6 +8,25 @@
 }
 
 .cometchat-root {
+  --cometchat-primary-color: var(--primary);
+  --cometchat-border-color-highlight: var(--primary);
+  --cometchat-text-color-highlight: var(--primary);
+  --cometchat-icon-color-highlight: var(--primary);
+  --cometchat-primary-button-background: var(--primary);
+  --cometchat-text-color-primary: var(--foreground);
+  --cometchat-text-color-secondary: var(--muted-foreground);
+  --cometchat-text-color-tertiary: color-mix(in oklab, var(--muted-foreground) 78%, transparent);
+  --cometchat-text-color-disabled: color-mix(in oklab, var(--muted-foreground) 52%, transparent);
+  --cometchat-icon-color-primary: var(--foreground);
+  --cometchat-icon-color-secondary: var(--muted-foreground);
+  --cometchat-icon-color-tertiary: color-mix(in oklab, var(--muted-foreground) 78%, transparent);
+  --cometchat-background-color-01: var(--card);
+  --cometchat-background-color-02: var(--input-background);
+  --cometchat-background-color-03: var(--muted);
+  --cometchat-background-color-04: var(--accent);
+  --cometchat-border-color-default: var(--border);
+  --cometchat-border-color-light: color-mix(in oklab, var(--border) 85%, transparent);
+  --cometchat-border-color-dark: color-mix(in oklab, var(--border) 75%, var(--foreground) 25%);
   width: 100%;
   height: 100%;
   display: flex;

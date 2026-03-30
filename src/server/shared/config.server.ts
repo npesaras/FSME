@@ -54,6 +54,10 @@ export const config = {
       ['APPWRITE_USER_PROFILES_TABLE_ID', 'VITE_APPWRITE_USER_PROFILES_TABLE_ID'],
       'user_profiles'
     )!,
+    cometUserProfilesTableId: readEnv(
+      ['APPWRITE_COMET_USER_PROFILES_TABLE_ID', 'VITE_APPWRITE_COMET_USER_PROFILES_TABLE_ID'],
+      'comet_user_profiles'
+    )!,
     documentTrackingTableId: readEnv(
       ['APPWRITE_DOCUMENT_TRACKING_TABLE_ID', 'VITE_APPWRITE_DOCUMENT_TRACKING_TABLE_ID'],
       'document_tracking'
@@ -64,5 +68,10 @@ export const config = {
     )!,
     recoveryOrigins: readOrigins(['APPWRITE_AUTH_RECOVERY_ORIGINS'], defaultOrigins),
     verificationOrigins: readOrigins(['APPWRITE_AUTH_VERIFICATION_ORIGINS'], defaultOrigins),
+  },
+  cometchat: {
+    appId: readEnv(['COMETCHAT_APP_ID', 'VITE_COMETCHAT_APP_ID'], '')!,
+    region: readEnv(['COMETCHAT_REGION', 'VITE_COMETCHAT_REGION'], '')!,
+    apiKey: readEnv(['COMETCHAT_API_KEY'], '')!,
   },
 } as const

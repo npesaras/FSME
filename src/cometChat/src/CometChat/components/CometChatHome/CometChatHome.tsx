@@ -62,6 +62,10 @@ import { useCometChatContext } from '../../context/CometChatContext';
 import { CometChatSettings } from '../../CometChatSettings';
 import useSystemColorScheme from '../../customHooks';
 import CometChatSearchView from '../CometChatSearchView/CometChatSearchView';
+import {
+  getCometChatUserAuthToken,
+  getVerifiedCometChatLoggedInUser,
+} from '#/features/shared/chat/session';
 
 interface TabContentProps {
   selectedTab: string;
@@ -147,10 +151,33 @@ function CometChatHome({
 
   useEffect(() => {
     const listenerID = `HomeLoginListener_${new Date().getTime()}`;
+    let cancelled = false;
+
+    const syncLoggedInUser = () => {
+      void getVerifiedCometChatLoggedInUser().then((user) => {
+        if (!cancelled) {
+          setLoggedInUser(user);
+        }
+      });
+    };
+
+    syncLoggedInUser();
+
     CometChat.addLoginListener(
       listenerID,
       new CometChat.LoginListener({
+        loginSuccess: (user: CometChat.User) => {
+          if (getCometChatUserAuthToken(user)) {
+            setLoggedInUser(user);
+            return;
+          }
+
+          syncLoggedInUser();
+        },
         logoutSuccess: () => {
+          if (!cancelled) {
+            setLoggedInUser(null);
+          }
           setSelectedItem(undefined);
           setNewChat(undefined);
           setAppState({ type: 'updateSelectedItem', payload: undefined });
@@ -160,8 +187,12 @@ function CometChatHome({
         },
       })
     );
-    return () => CometChat.removeConnectionListener(listenerID);
-  });
+
+    return () => {
+      cancelled = true;
+      CometChat.removeLoginListener(listenerID);
+    };
+  }, [setAppState]);
   useEffect(() => {
     const ccOwnershipChanged = CometChatGroupEvents.ccOwnershipChanged.subscribe(() => {
       toastTextRef.current = getLocalizedString('ownership_transferred_successfully');
@@ -195,11 +226,6 @@ function CometChatHome({
       ccGroupMemberUnbanned?.unsubscribe();
       ccGroupMemberKicked?.unsubscribe();
     };
-  }, []);
-
-  useEffect(() => {
-    const user = CometChatUIKitLoginListener.getLoggedInUser();
-    setLoggedInUser(user);
   }, []);
 
   useEffect(() => {
@@ -2204,24 +2230,26 @@ function CometChatHome({
   };
 
   const getTheme = () => {
-    let theme = 'system';
-    if (styleFeatures) {
-      if (styleFeatures?.theme === 'system') {
-        theme = colorScheme;
-      } else {
-        theme = styleFeatures?.theme;
-      }
+    const appTheme =
+      typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
+
+    if (appTheme === 'light' || appTheme === 'dark') {
+      return appTheme;
     }
 
-    return theme;
+    if (!styleFeatures) {
+      return colorScheme;
+    }
+
+    return styleFeatures.theme === 'system' ? colorScheme : styleFeatures.theme;
   };
 
   return (
     loggedInUser && (
       <div
-        id={styleFeatures && `${styleFeatures?.theme}-theme`}
+        id="cometchat-theme-root"
         className="cometchat-root"
-        data-theme={styleFeatures && getTheme()}
+        data-theme={getTheme()}
       >
         {showAlertPopup.visible && (
           <CometChatAlertPopup

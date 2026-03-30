@@ -2,13 +2,22 @@ import {
   CometChatUIKit,
   UIKitSettingsBuilder,
 } from '@cometchat/chat-uikit-react'
+import { CometChat } from '@cometchat/chat-sdk-javascript'
 import { setupLocalization } from '#/cometChat/utils/utils'
 import type { CometChatRoleConfig } from './config'
+import {
+  getCometChatUserAuthToken,
+  getVerifiedCometChatLoggedInUser,
+} from './session'
 
 type CometChatCoreConfig = Pick<
   CometChatRoleConfig,
   'appId' | 'region' | 'authKey'
 >
+
+type CometChatSessionConfig = CometChatRoleConfig & {
+  uid: string
+}
 
 let initializedSignature: string | null = null
 let initPromise: Promise<void> | null = null
@@ -88,28 +97,46 @@ export async function ensureCometChatInitialized(
 }
 
 export async function ensureCometChatRoleSession(
-  config: CometChatRoleConfig,
+  config: CometChatSessionConfig,
 ) {
   const runSessionTransition = sessionTransitionPromise
     .catch(() => null)
     .then(async () => {
       await ensureCometChatInitialized(config)
 
-      const loggedInUser = await CometChatUIKit.getLoggedinUser()
+      const loggedInUser = await getVerifiedCometChatLoggedInUser()
 
       if (loggedInUser?.getUid() === config.uid) {
         return loggedInUser
       }
 
       if (loggedInUser) {
-        await CometChatUIKit.logout().catch(() => undefined)
+        await Promise.allSettled([
+          CometChatUIKit.logout().catch(() => undefined),
+          CometChat.logout().catch(() => undefined),
+        ])
       }
 
-      return CometChatUIKit.login(config.uid).catch((error) => {
-        throw new Error(
-          `CometChat login failed for ${config.actor} UID "${config.uid}": ${getCometChatErrorMessage(error)}`
-        )
-      })
+      const loggedInSession = await CometChatUIKit.login(config.uid).catch(
+        (error) => {
+          throw new Error(
+            `CometChat login failed for ${config.actor} UID "${config.uid}": ${getCometChatErrorMessage(error)}`
+          )
+        },
+      )
+      const verifiedUser =
+        (await getVerifiedCometChatLoggedInUser()) ?? loggedInSession
+
+      if (
+        verifiedUser?.getUid() === config.uid &&
+        getCometChatUserAuthToken(verifiedUser)
+      ) {
+        return verifiedUser
+      }
+
+      throw new Error(
+        `CometChat login failed for ${config.actor} UID "${config.uid}": the SDK did not produce a usable auth token. Restart the frontend dev server if you recently changed .env, and confirm that this UID exists in your CometChat app.`,
+      )
     })
 
   sessionTransitionPromise = runSessionTransition

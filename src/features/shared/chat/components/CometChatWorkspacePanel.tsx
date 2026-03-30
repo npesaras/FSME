@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import CometChatApp from '#/cometChat/CometChatApp'
 import { CometChatProvider } from '#/cometChat/context/CometChatContext'
 import type { CometChatRoleConfig } from '../config'
+import { getCurrentCometChatProfileServerFn } from '../profile.functions'
 import { ensureCometChatRoleSession } from '../runtime'
 import { ChatStatusPanel } from './ChatStatusPanel'
 
@@ -9,9 +10,30 @@ type ChatState =
   | { status: 'loading' }
   | { status: 'missing-config'; missingKeys: string[] }
   | { status: 'ready' }
+  | { status: 'resolving-profile' }
   | { status: 'error'; message: string }
 
 function formatError(error: unknown) {
+  const collectDetails = (candidate: Record<string, unknown>) => {
+    const nestedData =
+      candidate.data && typeof candidate.data === 'object'
+        ? (candidate.data as Record<string, unknown>)
+        : null
+    const nestedCause =
+      candidate.cause && typeof candidate.cause === 'object'
+        ? (candidate.cause as Record<string, unknown>)
+        : null
+
+    return [
+      typeof candidate.message === 'string' ? candidate.message : null,
+      typeof nestedData?.message === 'string' ? nestedData.message : null,
+      typeof nestedCause?.message === 'string' ? nestedCause.message : null,
+      typeof candidate.code === 'string' ? `code: ${candidate.code}` : null,
+      typeof nestedData?.code === 'string' ? `code: ${nestedData.code}` : null,
+      typeof candidate.statusCode === 'number' ? `status: ${candidate.statusCode}` : null,
+    ].filter(Boolean)
+  }
+
   if (error instanceof Error && error.message) {
     return error.message
   }
@@ -22,12 +44,7 @@ function formatError(error: unknown) {
 
   if (error && typeof error === 'object') {
     const candidate = error as Record<string, unknown>
-    const detail = [
-      typeof candidate.message === 'string' ? candidate.message : null,
-      typeof candidate.code === 'string' ? `code: ${candidate.code}` : null,
-    ]
-      .filter(Boolean)
-      .join(' | ')
+    const detail = collectDetails(candidate).join(' | ')
 
     if (detail) {
       return detail
@@ -59,7 +76,17 @@ export default function CometChatWorkspacePanel({
 
     setChatState({ status: 'loading' })
 
-    void ensureCometChatRoleSession(config)
+    void getCurrentCometChatProfileServerFn()
+      .then((profile) => {
+        if (!cancelled) {
+          setChatState({ status: 'resolving-profile' })
+        }
+
+        return ensureCometChatRoleSession({
+          ...config,
+          uid: profile.uid,
+        })
+      })
       .then(() => {
         if (!cancelled) {
           setChatState({ status: 'ready' })
@@ -69,8 +96,8 @@ export default function CometChatWorkspacePanel({
         console.error('CometChat workspace startup failed', {
           actor: config.actor,
           region: config.region,
-          uid: config.uid,
           error,
+          formattedError: formatError(error),
         })
 
         if (!cancelled) {
@@ -90,7 +117,17 @@ export default function CometChatWorkspacePanel({
     return (
       <ChatStatusPanel
         title="Starting chat workspace"
-        description="Initializing the CometChat UI kit and signing this workspace into the shared chat session."
+        description="Initializing the CometChat UI kit for the authenticated workspace."
+        bare={bare}
+      />
+    )
+  }
+
+  if (chatState.status === 'resolving-profile') {
+    return (
+      <ChatStatusPanel
+        title="Preparing your chat identity"
+        description="Resolving your Appwrite-backed CometChat profile and signing your account into chat."
         bare={bare}
       />
     )
@@ -126,7 +163,7 @@ export default function CometChatWorkspacePanel({
     return (
       <ChatStatusPanel
         title="Chat workspace could not start"
-        description="CometChat returned an initialization or login error for this role-specific workspace."
+        description="CometChat returned an initialization, provisioning, or login error for the authenticated workspace."
         bare={bare}
       >
         <div className="mt-5 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm leading-7 text-destructive">
@@ -134,8 +171,8 @@ export default function CometChatWorkspacePanel({
         </div>
         <p className="mt-4 text-xs leading-6 text-muted-foreground">
           Check the browser console for the raw CometChat error object. The most common causes are
-          a missing role UID, a UID that does not exist in your CometChat app, or an app ID /
-          region / auth key mismatch.
+          a missing CometChat API key on the server, a failed user provisioning request, or an app
+          ID / region / auth key mismatch.
         </p>
       </ChatStatusPanel>
     )

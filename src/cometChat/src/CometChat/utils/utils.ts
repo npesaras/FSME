@@ -104,9 +104,9 @@ function blendColorWith(color: string, percentage: number, blendWith: string): s
  * @static
  */
 export function generateExtendedColors() {
-  const isDarkMode = document.querySelector('[data-theme="dark"]') ? true : false;
+  const root = document.querySelector('.cometchat-root') as HTMLElement | null;
+  const isDarkMode = root?.dataset.theme === 'dark' || document.documentElement.getAttribute('data-theme') === 'dark';
 
-  const root = document.querySelector('[class="cometchat-root"]') as HTMLElement;
   const primaryColor = root ? getComputedStyle(root).getPropertyValue('--cometchat-primary-color').trim() : '#6852D6';
 
   if (primaryColor && root) {

@@ -1,30 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import {
   Bell,
-  AppWindow,
-  FileText,
-  Globe,
-  LayoutDashboard,
   LogOut,
   Menu,
-  MessageSquare,
   Settings,
-  UserCircle,
 } from 'lucide-react'
 
 import { signOut } from '../../auth/api'
 import type { AuthAccount } from '../../auth/types'
 import { preloadChatWorkspace } from '../../shared/chat/preload'
-
-interface NavItemProps {
-  icon: ReactNode
-  label: string
-  active?: boolean
-  to?: '/panelist/documents' | '/panelist/chat' | '/panelist/applications'
-  preload?: false | 'intent' | 'viewport' | 'render'
-  onSelect?: () => void
-}
+import { PanelistSidebar } from './PanelistSidebar'
 
 export type PanelistWorkspaceSection =
   | 'dashboard'
@@ -37,49 +23,6 @@ interface PanelistWorkspaceShellProps {
   account: AuthAccount
   activeSection: PanelistWorkspaceSection
   children: ReactNode
-}
-
-function SidebarItem({
-  icon,
-  label,
-  active,
-  to,
-  preload,
-  onSelect,
-}: NavItemProps) {
-  const className = `flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-    active
-      ? 'border-r-4 border-primary bg-primary/10 text-primary'
-      : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
-  }`
-
-  if (to) {
-    return (
-      <Link
-        to={to}
-        preload={preload}
-        className={className}
-      >
-        <div className={active ? 'text-primary' : 'text-muted-foreground'}>
-          {icon}
-        </div>
-        <span className="text-sm font-medium">{label}</span>
-      </Link>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={className}
-    >
-      <div className={active ? 'text-primary' : 'text-muted-foreground'}>
-        {icon}
-      </div>
-      <span className="text-sm font-medium">{label}</span>
-    </button>
-  )
 }
 
 function getInitials(name: string) {
@@ -216,60 +159,16 @@ export function PanelistWorkspaceShell({
 
   return (
     <div className="faculty-shell flex min-h-screen w-full overflow-hidden font-sans text-foreground">
-      <aside className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col overflow-y-auto border-r border-border/80 bg-card md:flex">
-        <div className="flex items-center gap-3 p-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <Globe className="h-5 w-5" />
-          </div>
-          <span className="text-xl leading-tight font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
-            Tanaw School System
-          </span>
-        </div>
-
-        <nav className="flex-1 space-y-1 py-4">
-          <SidebarItem
-            icon={<LayoutDashboard size={20} />}
-            label="Dashboard"
-            active={activeSection === 'dashboard'}
-            onSelect={handleDashboardNavigation}
-          />
-          <SidebarItem
-            icon={<AppWindow size={20} />}
-            label="Applications"
-            active={activeSection === 'application'}
-            onSelect={handleApplicationNavigation}
-          />
-          <SidebarItem
-            icon={<FileText size={20} />}
-            label="Documents"
-            active={activeSection === 'documents'}
-            to="/panelist/documents"
-          />
-          <SidebarItem
-            icon={<MessageSquare size={20} />}
-            label="Chat"
-            active={activeSection === 'chat'}
-            to="/panelist/chat"
-            preload="render"
-          />
-          <SidebarItem
-            icon={<UserCircle size={20} />}
-            label="Account Settings"
-            active={activeSection === 'account-setting'}
-            onSelect={handleAccountSettingsNavigation}
-          />
-
-          <div className="mx-4 my-4 border-t border-border/70"></div>
-
-          <SidebarItem
-            icon={<LogOut size={20} />}
-            label={isSigningOut ? 'Signing Out...' : 'Logout'}
-            onSelect={() => {
-              void handleSignOut()
-            }}
-          />
-        </nav>
-      </aside>
+      <PanelistSidebar
+        activeSection={activeSection}
+        isSigningOut={isSigningOut}
+        onAccountSettingsSelect={handleAccountSettingsNavigation}
+        onApplicationSelect={handleApplicationNavigation}
+        onDashboardSelect={handleDashboardNavigation}
+        onSignOut={() => {
+          void handleSignOut()
+        }}
+      />
 
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/80 bg-card px-6">

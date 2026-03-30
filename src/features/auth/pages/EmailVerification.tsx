@@ -142,7 +142,7 @@ function getVerificationContent({
   if (status === 'verifying') {
     return {
       title: 'Verifying Email',
-      subtitle: 'We are confirming your Appwrite email verification link.',
+      subtitle: 'We are confirming your email verification link.',
       body: 'Please wait while we finish verifying your account.',
       Icon: LoaderCircle,
       iconWrapperClassName:

@@ -3,7 +3,7 @@ import { useForm } from '@tanstack/react-form'
 import { Link, getRouteApi, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { AuthApiError, resetPassword } from '../api'
+import { resetPassword } from '../api'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
   authBodyTextClassName,
@@ -15,6 +15,7 @@ import {
   authPrimaryButtonClassName,
   authTrailingIconClassName,
 } from '../components/authClassNames'
+import { showAuthErrorToast } from '../form-utils'
 
 const resetPasswordRoute = getRouteApi('/(public)/reset-password')
 const resetPasswordErrorToastId = 'auth-reset-password-error'
@@ -51,14 +52,11 @@ export default function ResetPasswordPage() {
           to: '/reset-success',
         })
       } catch (error) {
-        toast.error(
-          error instanceof AuthApiError
-            ? error.message
-            : 'Unable to reset your password right now. Please try again.',
-          {
-            id: resetPasswordErrorToastId,
-          },
-        )
+        showAuthErrorToast({
+          error,
+          fallbackMessage: 'Unable to reset your password right now. Please try again.',
+          id: resetPasswordErrorToastId,
+        })
       }
     },
   })

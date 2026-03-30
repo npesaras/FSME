@@ -3,7 +3,7 @@ import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
 import { CheckCircle2, Mail } from 'lucide-react'
 import { toast } from 'sonner'
-import { AuthApiError, forgotPassword } from '../api'
+import { forgotPassword } from '../api'
 import AuthSplitLayout from '../components/AuthSplitLayout'
 import {
   authBodyTextClassName,
@@ -15,6 +15,7 @@ import {
   authPrimaryLinkButtonClassName,
   authTrailingIconClassName,
 } from '../components/authClassNames'
+import { showAuthErrorToast } from '../form-utils'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const forgotPasswordErrorToastId = 'auth-forgot-password-error'
@@ -35,14 +36,11 @@ export default function ForgotPasswordPage() {
 
         setSuccessMessage(response.message)
       } catch (error) {
-        toast.error(
-          error instanceof AuthApiError
-            ? error.message
-            : 'Unable to send reset instructions right now. Please try again.',
-          {
-            id: forgotPasswordErrorToastId,
-          },
-        )
+        showAuthErrorToast({
+          error,
+          fallbackMessage: 'Unable to send reset instructions right now. Please try again.',
+          id: forgotPasswordErrorToastId,
+        })
       }
     },
   })
@@ -115,15 +113,15 @@ export default function ForgotPasswordPage() {
                     name={field.name}
                     type="email"
                     autoComplete="email"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(event) => {
-                    toast.dismiss(forgotPasswordErrorToastId)
-                    field.handleChange(event.target.value)
-                  }}
-                  className={authInputClassName}
-                  placeholder="Enter your email"
-                />
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => {
+                      toast.dismiss(forgotPasswordErrorToastId)
+                      field.handleChange(event.target.value)
+                    }}
+                    className={authInputClassName}
+                    placeholder="Enter your email"
+                  />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                     <Mail className={authTrailingIconClassName} />
                   </div>

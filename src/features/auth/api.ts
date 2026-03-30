@@ -42,6 +42,10 @@ type VerifyEmailPayload = {
 type ApiErrorPayload = {
   message?: string
   code?: string
+  details?: Array<{
+    path?: string
+    message?: string
+  }>
 }
 
 export class AuthApiError extends Error {
@@ -62,18 +66,20 @@ function getReadableAuthErrorMessage({
   statusCode,
   message,
   code,
+  details,
 }: {
   path: string
   statusCode: number
   message?: string
   code?: string
+  details?: ApiErrorPayload['details']
 }) {
   if (code === 'INVALID_CREDENTIALS' || (path.includes('/auth/sign-in') && statusCode === 401)) {
-    return 'We could not sign you in with that email and password. Please try again.'
+    return 'We could not sign you in with that email and password. Please check them and try again.'
   }
 
   if (code === 'EMAIL_NOT_VERIFIED') {
-    return 'Your account is not yet verified.'
+    return 'Please verify your email before signing in. Check your inbox for the latest verification message.'
   }
 
   if (code === 'EMAIL_TAKEN' || (path.includes('/auth/sign-up') && statusCode === 409)) {
@@ -84,23 +90,215 @@ function getReadableAuthErrorMessage({
     return 'This verification link is invalid or has expired.'
   }
 
+  if (code === 'INVALID_RECOVERY') {
+    return 'This password reset link is invalid or has expired.'
+  }
+
   if (code === 'ACCOUNT_BLOCKED') {
-    return 'Your account has been temporarily suspended. Please contact support.'
+    return 'Your account is temporarily unavailable. Please contact support.'
   }
 
   if (code === 'ACCOUNT_ROLE_MISSING') {
-    return 'Your account does not have an assigned application role. Please contact support.'
+    return 'Your account setup is incomplete. Please contact support.'
   }
 
   if (code === 'RATE_LIMITED') {
-    return 'Please wait a moment before trying again.'
+    return 'Please wait a moment, then try again.'
+  }
+
+  if (code === 'VERIFICATION_SEND_FAILED') {
+    return 'We could not send the verification email right now. Please try again.'
+  }
+
+  if (code === 'SESSION_CREATION_FAILED') {
+    if (path.includes('/auth/sign-up')) {
+      return 'Your account was created, but we could not send the verification email. Please try signing in again in a moment.'
+    }
+
+    return 'We could not finish signing you in right now. Please try again.'
   }
 
   if (message?.includes('missing scope')) {
     return 'We could not finish signing you in right now. Please try again.'
   }
 
-  return message || 'The authentication request failed.'
+  if (code === 'VALIDATION_ERROR' || statusCode === 400 || looksLikeTechnicalValidationMessage(message)) {
+    return getValidationMessage({
+      path,
+      message,
+      details,
+    })
+  }
+
+  if (statusCode === 401) {
+    return 'Your session has expired. Please sign in again.'
+  }
+
+  if (statusCode === 403) {
+    return 'You do not have access to complete this request.'
+  }
+
+  if (statusCode === 404) {
+    return 'We could not find what you were looking for.'
+  }
+
+  if (statusCode === 409) {
+    return 'This request could not be completed because something has already changed. Please try again.'
+  }
+
+  if (statusCode >= 500) {
+    return getDefaultAuthErrorMessage(path)
+  }
+
+  return getDefaultAuthErrorMessage(path)
+}
+
+function getDefaultAuthErrorMessage(path: string) {
+  if (path.includes('/auth/sign-in')) {
+    return 'Unable to sign in right now. Please try again.'
+  }
+
+  if (path.includes('/auth/sign-up')) {
+    return 'Unable to create your account right now. Please try again.'
+  }
+
+  if (path.includes('/auth/forgot-password')) {
+    return 'Unable to send reset instructions right now. Please try again.'
+  }
+
+  if (path.includes('/auth/reset-password')) {
+    return 'Unable to reset your password right now. Please try again.'
+  }
+
+  if (path.includes('/auth/verify-email')) {
+    return 'Unable to verify your email right now. Please try again.'
+  }
+
+  return 'We could not complete your request right now. Please try again.'
+}
+
+function looksLikeTechnicalValidationMessage(message?: string) {
+  const normalizedMessage = message?.toLowerCase()
+
+  if (!normalizedMessage) {
+    return false
+  }
+
+  return (
+    normalizedMessage.includes('missing required') ||
+    normalizedMessage.includes('required parameter') ||
+    normalizedMessage.includes('request body is invalid') ||
+    normalizedMessage.includes('payload') && normalizedMessage.includes('invalid') ||
+    normalizedMessage.includes('param') && normalizedMessage.includes('invalid') ||
+    normalizedMessage.includes('parameter') && normalizedMessage.includes('invalid') ||
+    normalizedMessage.includes('must be a valid') ||
+    normalizedMessage.includes('too short') ||
+    normalizedMessage.includes('too long')
+  )
+}
+
+function getValidationMessage({
+  path,
+  message,
+  details,
+}: {
+  path: string
+  message?: string
+  details?: ApiErrorPayload['details']
+}) {
+  const fields = getMentionedFields(details, message)
+
+  if (path.includes('/auth/sign-in')) {
+    if (fields.has('email') && fields.has('password')) {
+      return 'Enter your email address and password to continue.'
+    }
+
+    if (fields.has('email')) {
+      return 'Enter a valid email address to continue.'
+    }
+
+    if (fields.has('password')) {
+      return 'Enter your password to continue.'
+    }
+
+    return 'Please check your sign-in details and try again.'
+  }
+
+  if (path.includes('/auth/sign-up')) {
+    if (fields.has('name')) {
+      return 'Enter your full name to continue.'
+    }
+
+    if (fields.has('email')) {
+      return 'Enter a valid email address to continue.'
+    }
+
+    if (fields.has('password')) {
+      return 'Choose a stronger password and try again.'
+    }
+
+    return 'Please review your details and try again.'
+  }
+
+  if (path.includes('/auth/forgot-password')) {
+    return 'Enter a valid email address to continue.'
+  }
+
+  if (path.includes('/auth/reset-password')) {
+    if (fields.has('secret') || fields.has('userId')) {
+      return 'This password reset link is invalid or incomplete.'
+    }
+
+    if (fields.has('password')) {
+      return 'Choose a stronger password and try again.'
+    }
+
+    return 'Please check your new password and try again.'
+  }
+
+  if (path.includes('/auth/verify-email')) {
+    return 'This verification link is invalid or incomplete.'
+  }
+
+  return 'Please review your details and try again.'
+}
+
+function getMentionedFields(details?: ApiErrorPayload['details'], message?: string) {
+  const fields = new Set<string>()
+
+  for (const detail of details ?? []) {
+    if (detail.path) {
+      fields.add(detail.path)
+    }
+  }
+
+  const normalizedMessage = message?.toLowerCase() ?? ''
+
+  if (normalizedMessage.includes('email')) {
+    fields.add('email')
+  }
+
+  if (normalizedMessage.includes('password')) {
+    fields.add('password')
+  }
+
+  if (normalizedMessage.includes('name')) {
+    fields.add('name')
+  }
+
+  if (normalizedMessage.includes('secret')) {
+    fields.add('secret')
+  }
+
+  if (
+    normalizedMessage.includes('userid') ||
+    normalizedMessage.includes('user id') ||
+    normalizedMessage.includes('user_id')
+  ) {
+    fields.add('userId')
+  }
+
+  return fields
 }
 
 async function sendAuthRequest<TResponse>(
@@ -145,6 +343,7 @@ async function sendAuthRequest<TResponse>(
         statusCode: response.status,
         message: errorPayload?.message,
         code: errorPayload?.code,
+        details: errorPayload?.details,
       }),
       response.status,
       errorPayload?.code

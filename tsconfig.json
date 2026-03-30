@@ -6,6 +6,7 @@
     "module": "ESNext",
     "baseUrl": ".",
     "paths": {
+      "#/cometChat/*": ["./src/cometChat/src/CometChat/*"],
       "#/*": ["./src/*"],
       "@/*": ["./src/*"]
     },

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import {
   AppWindow,
@@ -15,12 +15,14 @@ import {
 
 import { signOut } from '../../auth/api'
 import type { AuthAccount } from '../../auth/types'
+import { preloadChatWorkspace } from '../../shared/chat/preload'
 
 interface NavItemProps {
   icon: ReactNode
   label: string
   active?: boolean
   to?: '/faculty/documents' | '/faculty/chat' | '/faculty/applications'
+  preload?: false | 'intent' | 'viewport' | 'render'
   onSelect?: () => void
 }
 
@@ -42,6 +44,7 @@ function SidebarItem({
   label,
   active,
   to,
+  preload,
   onSelect,
 }: NavItemProps) {
   const className = `flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
@@ -54,6 +57,7 @@ function SidebarItem({
     return (
       <Link
         to={to}
+        preload={preload}
         className={className}
       >
         <div className={active ? 'text-primary' : 'text-muted-foreground'}>
@@ -106,6 +110,54 @@ export function FacultyWorkspaceShell({
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const roleLabel = getRoleLabel(account.role)
+
+  useEffect(() => {
+    if (activeSection === 'chat') {
+      return
+    }
+
+    let cancelled = false
+    let timeoutId: number | undefined
+    let idleId: number | undefined
+
+    const warmChatWorkspace = () => {
+      if (cancelled) {
+        return
+      }
+
+      const chatRoute = router.routesByPath['/faculty/chat']
+
+      if (chatRoute) {
+        void router.loadRouteChunk(chatRoute).catch(() => undefined)
+      }
+
+      void preloadChatWorkspace('faculty')
+    }
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(warmChatWorkspace, {
+        timeout: 1200,
+      })
+    } else {
+      timeoutId = window.setTimeout(warmChatWorkspace, 300)
+    }
+
+    return () => {
+      cancelled = true
+
+      if (
+        typeof window !== 'undefined' &&
+        idleId !== undefined &&
+        'cancelIdleCallback' in window
+      ) {
+        window.cancelIdleCallback(idleId)
+      }
+
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [activeSection, router])
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -201,6 +253,7 @@ export function FacultyWorkspaceShell({
             label="Chat"
             active={activeSection === 'chat'}
             to="/faculty/chat"
+            preload="render"
           />
           <SidebarItem
             icon={<UserCircle size={20} />}

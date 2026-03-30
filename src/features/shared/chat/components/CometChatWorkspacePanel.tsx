@@ -39,8 +39,10 @@ function formatError(error: unknown) {
 
 export default function CometChatWorkspacePanel({
   config,
+  bare = false,
 }: {
   config: CometChatRoleConfig
+  bare?: boolean
 }) {
   const [chatState, setChatState] = useState<ChatState>({ status: 'loading' })
 
@@ -89,6 +91,7 @@ export default function CometChatWorkspacePanel({
       <ChatStatusPanel
         title="Starting chat workspace"
         description="Initializing the CometChat UI kit and signing this workspace into the shared chat session."
+        bare={bare}
       />
     )
   }
@@ -98,6 +101,7 @@ export default function CometChatWorkspacePanel({
       <ChatStatusPanel
         title="CometChat needs configuration"
         description="Add the missing Vite environment variables below in `.env`, then restart the frontend dev server."
+        bare={bare}
       >
         <div className="mt-5 rounded-2xl border border-dashed border-border bg-muted/30 p-4">
           <p className="m-0 text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
@@ -123,6 +127,7 @@ export default function CometChatWorkspacePanel({
       <ChatStatusPanel
         title="Chat workspace could not start"
         description="CometChat returned an initialization or login error for this role-specific workspace."
+        bare={bare}
       >
         <div className="mt-5 rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm leading-7 text-destructive">
           {chatState.message}
@@ -137,7 +142,7 @@ export default function CometChatWorkspacePanel({
   }
 
   return (
-    <div className="h-[75vh] min-h-[680px] w-full">
+    <div className={`w-full ${bare ? 'h-[calc(100vh-4rem)] min-h-[680px]' : 'h-[75vh] min-h-[680px]'}`}>
       <CometChatProvider>
         <CometChatApp />
       </CometChatProvider>

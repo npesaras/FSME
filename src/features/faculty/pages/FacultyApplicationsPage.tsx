@@ -1,14 +1,18 @@
-import ScopePage from '../../shared/components/ScopePage'
-import { facultyScopeLinks } from '../config'
-
 export default function FacultyApplicationsPage() {
   return (
-    <ScopePage
-      kicker="Faculty applications"
-      title="Shape the application workflow around draft, submit, and revise."
-      description="This page is the natural home for your faculty application list, draft editor, validation status, and submission readiness logic."
-      links={facultyScopeLinks.filter((link) => link.to !== '/faculty/applications')}
-    >
+    <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+      <div className="mb-8">
+        <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-primary uppercase">
+          Faculty applications
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+          Shape the application workflow around draft, submit, and revise.
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+          This page is the natural home for your faculty application list, draft editor,
+          validation status, and submission readiness logic.
+        </p>
+      </div>
       <section className="mt-8 grid gap-4 md:grid-cols-2">
         {[
           [
@@ -40,8 +44,8 @@ export default function FacultyApplicationsPage() {
               {description}
             </p>
           </article>
-        ))}
+          ))}
       </section>
-    </ScopePage>
+    </div>
   )
 }

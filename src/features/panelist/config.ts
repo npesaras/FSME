@@ -1,6 +1,6 @@
-import type { ScopeLink } from '../shared/components/ScopePage'
+import type { WorkspaceLink } from '../shared/workspace-links'
 
-export const panelistScopeLinks: ScopeLink[] = [
+export const panelistScopeLinks: WorkspaceLink[] = [
   {
     label: 'Panelist feature',
     title: 'Review queue',

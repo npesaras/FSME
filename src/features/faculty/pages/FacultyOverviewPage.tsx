@@ -1,14 +1,18 @@
-import ScopePage from '../../shared/components/ScopePage'
-import { facultyScopeLinks } from '../config'
-
 export default function FacultyOverviewPage() {
   return (
-    <ScopePage
-      kicker="Faculty scope"
-      title="Everything a faculty applicant needs in one workflow space."
-      description="The faculty area owns the applicant journey: preparing applications, uploading documents, checking readiness, and following status updates after submission."
-      links={facultyScopeLinks}
-    >
+    <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+      <div className="mb-8">
+        <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-primary uppercase">
+          Faculty scope
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+          Everything a faculty applicant needs in one workflow space.
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+          The faculty area owns the applicant journey: preparing applications, uploading
+          documents, checking readiness, and following status updates after submission.
+        </p>
+      </div>
       <section className="mt-8 grid gap-4 lg:grid-cols-3">
         {[
           [
@@ -36,8 +40,8 @@ export default function FacultyOverviewPage() {
               {description}
             </p>
           </article>
-        ))}
+          ))}
       </section>
-    </ScopePage>
+    </div>
   )
 }

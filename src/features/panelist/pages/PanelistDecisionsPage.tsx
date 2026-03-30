@@ -1,14 +1,18 @@
-import ScopePage from '../../shared/components/ScopePage'
-import { panelistScopeLinks } from '../config'
-
 export default function PanelistDecisionsPage() {
   return (
-    <ScopePage
-      kicker="Panelist decisions"
-      title="Keep recommendation and outcome recording in a dedicated decision feature."
-      description="Decision recording deserves its own feature boundary so recommendation values, rationale, timestamps, and audit events can evolve without tangling with the review queue."
-      links={panelistScopeLinks.filter((link) => link.to !== '/panelist/decisions')}
-    >
+    <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+      <div className="mb-8">
+        <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-primary uppercase">
+          Panelist decisions
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+          Keep recommendation and outcome recording in a dedicated decision feature.
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+          Decision recording deserves its own feature boundary so recommendation values, rationale,
+          timestamps, and audit events can evolve without tangling with the review queue.
+        </p>
+      </div>
       <section className="mt-8 grid gap-4 md:grid-cols-2">
         {[
           [
@@ -40,8 +44,8 @@ export default function PanelistDecisionsPage() {
               {description}
             </p>
           </article>
-        ))}
+          ))}
       </section>
-    </ScopePage>
+    </div>
   )
 }

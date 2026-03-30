@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { useNavigate, useRouter } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import {
   AppWindow,
   Bell,
@@ -20,6 +20,7 @@ interface NavItemProps {
   icon: ReactNode
   label: string
   active?: boolean
+  to?: '/faculty/documents' | '/faculty/chat' | '/faculty/applications'
   onSelect?: () => void
 }
 
@@ -40,17 +41,34 @@ function SidebarItem({
   icon,
   label,
   active,
+  to,
   onSelect,
 }: NavItemProps) {
+  const className = `flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+    active
+      ? 'border-r-4 border-primary bg-primary/10 text-primary'
+      : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+  }`
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={className}
+      >
+        <div className={active ? 'text-primary' : 'text-muted-foreground'}>
+          {icon}
+        </div>
+        <span className="text-sm font-medium">{label}</span>
+      </Link>
+    )
+  }
+
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-        active
-          ? 'border-r-4 border-primary bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
-      }`}
+      className={className}
     >
       <div className={active ? 'text-primary' : 'text-muted-foreground'}>
         {icon}
@@ -109,34 +127,42 @@ export function FacultyWorkspaceShell({
     }
   }
 
-  const handleNavigation = (section: FacultyWorkspaceSection) => {
+  const handleAccountSettingsNavigation = () => {
     setIsProfileOpen(false)
 
-    if (section === activeSection) {
+    if (activeSection === 'account-setting') {
       return
     }
 
-    switch (section) {
-      case 'dashboard':
-      case 'application':
-      case 'account-setting':
-        void navigate({
-          to: '/faculty',
-          search: {
-            view: section,
-          },
-        })
-        return
-      case 'documents':
-        void navigate({
-          to: '/faculty/documents',
-        })
-        return
-      case 'chat':
-        void navigate({
-          to: '/faculty/chat',
-        })
+    void navigate({
+      to: '/faculty',
+      search: {
+        view: 'account-setting',
+      },
+    })
+  }
+
+  const handleDashboardNavigation = () => {
+    if (activeSection === 'dashboard') {
+      return
     }
+
+    void navigate({
+      to: '/faculty',
+    })
+  }
+
+  const handleApplicationNavigation = () => {
+    if (activeSection === 'application') {
+      return
+    }
+
+    void navigate({
+      to: '/faculty',
+      search: {
+        view: 'application',
+      },
+    })
   }
 
   return (
@@ -156,31 +182,31 @@ export function FacultyWorkspaceShell({
             icon={<LayoutDashboard size={20} />}
             label="Dashboard"
             active={activeSection === 'dashboard'}
-            onSelect={() => handleNavigation('dashboard')}
+            onSelect={handleDashboardNavigation}
           />
           <SidebarItem
             icon={<AppWindow size={20} />}
             label="Application"
             active={activeSection === 'application'}
-            onSelect={() => handleNavigation('application')}
+            onSelect={handleApplicationNavigation}
           />
           <SidebarItem
             icon={<FileText size={20} />}
             label="Documents"
             active={activeSection === 'documents'}
-            onSelect={() => handleNavigation('documents')}
+            to="/faculty/documents"
           />
           <SidebarItem
             icon={<MessageSquare size={20} />}
             label="Chat"
             active={activeSection === 'chat'}
-            onSelect={() => handleNavigation('chat')}
+            to="/faculty/chat"
           />
           <SidebarItem
             icon={<UserCircle size={20} />}
             label="Account Settings"
             active={activeSection === 'account-setting'}
-            onSelect={() => handleNavigation('account-setting')}
+            onSelect={handleAccountSettingsNavigation}
           />
 
           <div className="mx-4 my-4 border-t border-border/70"></div>
@@ -237,7 +263,7 @@ export function FacultyWorkspaceShell({
                 <div className="faculty-panel animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 rounded-xl bg-popover py-2 text-popover-foreground shadow-lg">
                   <button
                     type="button"
-                    onClick={() => handleNavigation('account-setting')}
+                    onClick={handleAccountSettingsNavigation}
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] font-medium text-foreground transition-colors hover:bg-accent/40 hover:text-primary"
                   >
                     <Settings className="h-4 w-4 text-muted-foreground" />

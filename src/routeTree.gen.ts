@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as FacultyRouteRouteImport } from './routes/faculty/route'
 import { Route as PanelistIndexRouteImport } from './routes/panelist/index'
 import { Route as FacultyIndexRouteImport } from './routes/faculty/index'
 import { Route as publicIndexRouteImport } from './routes/(public)/index'
@@ -37,15 +38,20 @@ import { Route as ApiV1AuthEmailStatusRouteImport } from './routes/api/v1/auth/e
 import { Route as ApiV1AppwriteTablesRouteImport } from './routes/api/v1/appwrite/tables'
 import { Route as ApiV1AppwriteHealthRouteImport } from './routes/api/v1/appwrite/health'
 
+const FacultyRouteRoute = FacultyRouteRouteImport.update({
+  id: '/faculty',
+  path: '/faculty',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PanelistIndexRoute = PanelistIndexRouteImport.update({
   id: '/panelist/',
   path: '/panelist/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FacultyIndexRoute = FacultyIndexRouteImport.update({
-  id: '/faculty/',
-  path: '/faculty/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => FacultyRouteRoute,
 } as any)
 const publicIndexRoute = publicIndexRouteImport.update({
   id: '/(public)/',
@@ -68,19 +74,19 @@ const PanelistChatRoute = PanelistChatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const FacultyDocumentsRoute = FacultyDocumentsRouteImport.update({
-  id: '/faculty/documents',
-  path: '/faculty/documents',
-  getParentRoute: () => rootRouteImport,
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => FacultyRouteRoute,
 } as any)
 const FacultyChatRoute = FacultyChatRouteImport.update({
-  id: '/faculty/chat',
-  path: '/faculty/chat',
-  getParentRoute: () => rootRouteImport,
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => FacultyRouteRoute,
 } as any)
 const FacultyApplicationsRoute = FacultyApplicationsRouteImport.update({
-  id: '/faculty/applications',
-  path: '/faculty/applications',
-  getParentRoute: () => rootRouteImport,
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => FacultyRouteRoute,
 } as any)
 const publicVerifyEmailRoute = publicVerifyEmailRouteImport.update({
   id: '/(public)/verify-email',
@@ -174,6 +180,7 @@ const ApiV1AppwriteHealthRoute = ApiV1AppwriteHealthRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/faculty': typeof FacultyRouteRouteWithChildren
   '/forgot-password': typeof publicForgotPasswordRoute
   '/home': typeof publicHomeRoute
   '/reset-password': typeof publicResetPasswordRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/faculty': typeof FacultyRouteRouteWithChildren
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/home': typeof publicHomeRoute
   '/(public)/reset-password': typeof publicResetPasswordRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/faculty'
     | '/forgot-password'
     | '/home'
     | '/reset-password'
@@ -322,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/verify-email'
   id:
     | '__root__'
+    | '/faculty'
     | '/(public)/forgot-password'
     | '/(public)/home'
     | '/(public)/reset-password'
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  FacultyRouteRoute: typeof FacultyRouteRouteWithChildren
   publicForgotPasswordRoute: typeof publicForgotPasswordRoute
   publicHomeRoute: typeof publicHomeRoute
   publicResetPasswordRoute: typeof publicResetPasswordRoute
@@ -359,14 +370,10 @@ export interface RootRouteChildren {
   publicSignInRoute: typeof publicSignInRoute
   publicSignupRoute: typeof publicSignupRoute
   publicVerifyEmailRoute: typeof publicVerifyEmailRoute
-  FacultyApplicationsRoute: typeof FacultyApplicationsRoute
-  FacultyChatRoute: typeof FacultyChatRoute
-  FacultyDocumentsRoute: typeof FacultyDocumentsRoute
   PanelistChatRoute: typeof PanelistChatRoute
   PanelistDecisionsRoute: typeof PanelistDecisionsRoute
   PanelistReviewsRoute: typeof PanelistReviewsRoute
   publicIndexRoute: typeof publicIndexRoute
-  FacultyIndexRoute: typeof FacultyIndexRoute
   PanelistIndexRoute: typeof PanelistIndexRoute
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1AppwriteHealthRoute: typeof ApiV1AppwriteHealthRoute
@@ -383,6 +390,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/faculty': {
+      id: '/faculty'
+      path: '/faculty'
+      fullPath: '/faculty'
+      preLoaderRoute: typeof FacultyRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/panelist/': {
       id: '/panelist/'
       path: '/panelist'
@@ -392,10 +406,10 @@ declare module '@tanstack/react-router' {
     }
     '/faculty/': {
       id: '/faculty/'
-      path: '/faculty'
+      path: '/'
       fullPath: '/faculty/'
       preLoaderRoute: typeof FacultyIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof FacultyRouteRoute
     }
     '/(public)/': {
       id: '/(public)/'
@@ -427,24 +441,24 @@ declare module '@tanstack/react-router' {
     }
     '/faculty/documents': {
       id: '/faculty/documents'
-      path: '/faculty/documents'
+      path: '/documents'
       fullPath: '/faculty/documents'
       preLoaderRoute: typeof FacultyDocumentsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof FacultyRouteRoute
     }
     '/faculty/chat': {
       id: '/faculty/chat'
-      path: '/faculty/chat'
+      path: '/chat'
       fullPath: '/faculty/chat'
       preLoaderRoute: typeof FacultyChatRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof FacultyRouteRoute
     }
     '/faculty/applications': {
       id: '/faculty/applications'
-      path: '/faculty/applications'
+      path: '/applications'
       fullPath: '/faculty/applications'
       preLoaderRoute: typeof FacultyApplicationsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof FacultyRouteRoute
     }
     '/(public)/verify-email': {
       id: '/(public)/verify-email'
@@ -575,7 +589,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface FacultyRouteRouteChildren {
+  FacultyApplicationsRoute: typeof FacultyApplicationsRoute
+  FacultyChatRoute: typeof FacultyChatRoute
+  FacultyDocumentsRoute: typeof FacultyDocumentsRoute
+  FacultyIndexRoute: typeof FacultyIndexRoute
+}
+
+const FacultyRouteRouteChildren: FacultyRouteRouteChildren = {
+  FacultyApplicationsRoute: FacultyApplicationsRoute,
+  FacultyChatRoute: FacultyChatRoute,
+  FacultyDocumentsRoute: FacultyDocumentsRoute,
+  FacultyIndexRoute: FacultyIndexRoute,
+}
+
+const FacultyRouteRouteWithChildren = FacultyRouteRoute._addFileChildren(
+  FacultyRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
+  FacultyRouteRoute: FacultyRouteRouteWithChildren,
   publicForgotPasswordRoute: publicForgotPasswordRoute,
   publicHomeRoute: publicHomeRoute,
   publicResetPasswordRoute: publicResetPasswordRoute,
@@ -583,14 +616,10 @@ const rootRouteChildren: RootRouteChildren = {
   publicSignInRoute: publicSignInRoute,
   publicSignupRoute: publicSignupRoute,
   publicVerifyEmailRoute: publicVerifyEmailRoute,
-  FacultyApplicationsRoute: FacultyApplicationsRoute,
-  FacultyChatRoute: FacultyChatRoute,
-  FacultyDocumentsRoute: FacultyDocumentsRoute,
   PanelistChatRoute: PanelistChatRoute,
   PanelistDecisionsRoute: PanelistDecisionsRoute,
   PanelistReviewsRoute: PanelistReviewsRoute,
   publicIndexRoute: publicIndexRoute,
-  FacultyIndexRoute: FacultyIndexRoute,
   PanelistIndexRoute: PanelistIndexRoute,
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1AppwriteHealthRoute: ApiV1AppwriteHealthRoute,

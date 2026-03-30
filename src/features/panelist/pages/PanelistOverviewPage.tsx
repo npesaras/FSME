@@ -1,14 +1,18 @@
-import ScopePage from '../../shared/components/ScopePage'
-import { panelistScopeLinks } from '../config'
-
 export default function PanelistOverviewPage() {
   return (
-    <ScopePage
-      kicker="Panelist scope"
-      title="Review, recommend, and record outcomes with a dedicated panelist workspace."
-      description="The panelist area owns reviewer-facing tools: a clean queue, focused evaluation views, recommendation support, and final decision recording."
-      links={panelistScopeLinks}
-    >
+    <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+      <div className="mb-8">
+        <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-primary uppercase">
+          Panelist scope
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground [font-family:var(--font-heading)]">
+          Review, recommend, and record outcomes with a dedicated panelist workspace.
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+          The panelist area owns reviewer-facing tools: a clean queue, focused evaluation views,
+          recommendation support, and final decision recording.
+        </p>
+      </div>
       <section className="mt-8 grid gap-4 lg:grid-cols-3">
         {[
           [
@@ -36,8 +40,8 @@ export default function PanelistOverviewPage() {
               {description}
             </p>
           </article>
-        ))}
+          ))}
       </section>
-    </ScopePage>
+    </div>
   )
 }

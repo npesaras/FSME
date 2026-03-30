@@ -1,19 +1,15 @@
 import { DocumentTrackingTable } from '../components/DocumentTrackingTable'
-import { FacultyWorkspaceShell } from '../components/FacultyWorkspaceShell'
-import type { AuthAccount } from '../../auth/types'
 
 interface FacultyDocumentsPageProps {
-  account: AuthAccount
+  accountId: string
 }
 
 export default function FacultyDocumentsPage({
-  account,
+  accountId,
 }: FacultyDocumentsPageProps) {
   return (
-    <FacultyWorkspaceShell account={account} activeSection="documents">
-      <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
-        <DocumentTrackingTable accountId={account.id} />
-      </div>
-    </FacultyWorkspaceShell>
+    <div className="mx-auto w-full max-w-[1600px] p-6 md:p-8">
+      <DocumentTrackingTable accountId={accountId} />
+    </div>
   )
 }

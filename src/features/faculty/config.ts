@@ -1,6 +1,6 @@
-import type { ScopeLink } from '../shared/components/ScopePage'
+import type { WorkspaceLink } from '../shared/workspace-links'
 
-export const facultyScopeLinks: ScopeLink[] = [
+export const facultyScopeLinks: WorkspaceLink[] = [
   {
     label: 'Faculty feature',
     title: 'Applications',

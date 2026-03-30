@@ -13,13 +13,20 @@ export const Route = createFileRoute('/faculty/')({
   loaderDeps: ({ search }) => ({
     view: search.view,
   }),
-  loader: ({ context, deps }) =>
-    deps.view === 'dashboard'
-      ? Promise.all([
-          context.queryClient.ensureQueryData(documentTrackingQueryOptions(context.account.id)),
-          context.queryClient.ensureQueryData(recentActivitiesQueryOptions(context.account.id)),
-        ])
-      : undefined,
+  loader: async ({ context, deps }) => {
+    if (deps.view !== 'dashboard') {
+      return
+    }
+
+    await Promise.all([
+      context.queryClient.ensureQueryData(
+        documentTrackingQueryOptions(context.account.id),
+      ),
+      context.queryClient.ensureQueryData(
+        recentActivitiesQueryOptions(context.account.id),
+      ),
+    ])
+  },
   component: FacultyDashboardRoute,
 })
 

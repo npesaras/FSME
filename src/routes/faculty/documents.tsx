@@ -3,10 +3,11 @@ import FacultyDocumentsPage from '../../features/faculty/pages/FacultyDocumentsP
 import { documentTrackingQueryOptions } from '../../features/faculty/document-tracking.queries'
 
 export const Route = createFileRoute('/faculty/documents')({
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(
       documentTrackingQueryOptions(context.account.id),
-    ),
+    )
+  },
   component: FacultyDocumentsRoute,
 })
 

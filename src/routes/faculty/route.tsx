@@ -14,13 +14,16 @@ export const Route = createFileRoute('/faculty')({
 
 function FacultyRouteLayout() {
   const { account } = Route.useRouteContext()
-  const location = useRouterState({
-    select: (state) => state.location,
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+  const searchStr = useRouterState({
+    select: (state) => state.location.searchStr,
   })
 
   const activeSection = getActiveSection({
-    pathname: location.pathname,
-    searchStr: location.searchStr,
+    pathname,
+    searchStr,
   })
 
   return (

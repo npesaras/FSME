@@ -59,4 +59,7 @@ For mixed ownership and role review:
 
 ## Current environment note
 
-The repository env configuration references `user_profiles`, but that table does not exist in the current Appwrite database yet. Until it exists, role data is being stored in Appwrite Auth labels and prefs instead of a separate profile row.
+- `user_profiles` is now the verified app-side profile table.
+- Appwrite Auth labels and prefs remain the live role source during sign-in and route protection.
+- The `user_profiles.role` column mirrors that Appwrite role after successful email verification so verified users have a clean app-side profile record.
+- `user_profiles` should keep row security enabled and stay server-managed unless the app later adds a direct client read path with explicit row permissions.

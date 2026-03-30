@@ -56,7 +56,7 @@ export async function getAppwriteStatus() {
     endpoint: config.appwrite.endpoint,
     projectId: config.appwrite.projectId,
     databaseId: config.appwrite.databaseId,
-    accountsTableId: config.appwrite.accountsTableId,
+    userProfilesTableId: config.appwrite.userProfilesTableId,
     tables: {
       total: tables.total,
       ids: tables.tables.map((table: Models.Table) => table.$id),

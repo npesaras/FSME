@@ -9,6 +9,7 @@ export type AuthAccount = {
   role: AuthRole
   status: string
   lastSignInAt: string | null
+  emailVerified: boolean
   createdAt: string
   updatedAt: string
 }
@@ -19,4 +20,10 @@ export type AuthSession = {
 
 export type AuthMessageResponse = {
   message: string
+}
+
+export type AuthVerificationPendingResponse = {
+  message: string
+  email: string
+  verificationRequired: true
 }

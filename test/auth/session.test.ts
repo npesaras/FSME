@@ -30,6 +30,7 @@ describe('auth session helpers', () => {
       role: 'panelist',
       status: 'active',
       lastSignInAt: null,
+      emailVerified: true,
       createdAt: '2026-03-29T00:00:00.000Z',
       updatedAt: '2026-03-29T00:00:00.000Z',
     })
@@ -59,6 +60,7 @@ describe('auth session helpers', () => {
       role: 'panelist',
       status: 'active',
       lastSignInAt: null,
+      emailVerified: true,
       createdAt: '2026-03-29T00:00:00.000Z',
       updatedAt: '2026-03-29T00:00:00.000Z',
     })
@@ -78,6 +80,7 @@ describe('auth session helpers', () => {
       role: 'faculty',
       status: 'active',
       lastSignInAt: null,
+      emailVerified: true,
       createdAt: '2026-03-29T00:00:00.000Z',
       updatedAt: '2026-03-29T00:00:00.000Z',
     })

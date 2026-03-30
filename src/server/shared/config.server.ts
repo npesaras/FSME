@@ -30,7 +30,8 @@ for (const envPath of envPaths) {
   }
 }
 
-const defaultOrigins = 'http://127.0.0.1:3000,http://localhost:3000'
+const defaultOrigins =
+  'http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:4173,http://localhost:4173'
 const nodeEnv = readEnv(['NODE_ENV'], 'development')!
 
 export const config = {
@@ -49,7 +50,10 @@ export const config = {
     projectId: readRequiredEnv(['APPWRITE_PROJECT_ID']),
     apiKey: readRequiredEnv(['APPWRITE_API_KEY']),
     databaseId: readRequiredEnv(['APPWRITE_DATABASE_ID']),
-    accountsTableId: readEnv(['APPWRITE_ACCOUNTS_TABLE_ID'], 'accounts')!,
+    userProfilesTableId: readEnv(
+      ['APPWRITE_USER_PROFILES_TABLE_ID', 'VITE_APPWRITE_USER_PROFILES_TABLE_ID'],
+      'user_profiles'
+    )!,
     documentTrackingTableId: readEnv(
       ['APPWRITE_DOCUMENT_TRACKING_TABLE_ID', 'VITE_APPWRITE_DOCUMENT_TRACKING_TABLE_ID'],
       'document_tracking'
@@ -59,5 +63,6 @@ export const config = {
       'recent_activities'
     )!,
     recoveryOrigins: readOrigins(['APPWRITE_AUTH_RECOVERY_ORIGINS'], defaultOrigins),
+    verificationOrigins: readOrigins(['APPWRITE_AUTH_VERIFICATION_ORIGINS'], defaultOrigins),
   },
 } as const

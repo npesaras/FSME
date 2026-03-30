@@ -1,6 +1,16 @@
-import type { AuthAccount, AuthMessageResponse, AuthSession } from './types'
+import type {
+  AuthAccount,
+  AuthMessageResponse,
+  AuthSession,
+  AuthVerificationPendingResponse,
+} from './types'
 
-export type { AuthAccount, AuthMessageResponse, AuthSession } from './types'
+export type {
+  AuthAccount,
+  AuthMessageResponse,
+  AuthSession,
+  AuthVerificationPendingResponse,
+} from './types'
 
 type SignInPayload = {
   email: string
@@ -29,6 +39,11 @@ type ResetPasswordPayload = {
   password: string
 }
 
+type VerifyEmailPayload = {
+  userId: string
+  secret: string
+}
+
 type ApiErrorPayload = {
   message?: string
   code?: string
@@ -36,6 +51,7 @@ type ApiErrorPayload = {
 
 export type AuthEmailStatus = {
   exists: boolean
+  verificationStatus: 'verified' | 'unverified' | 'missing'
 }
 
 export class AuthApiError extends Error {
@@ -66,8 +82,28 @@ function getReadableAuthErrorMessage({
     return 'We could not sign you in with that email and password. Please try again.'
   }
 
+  if (code === 'ACCOUNT_NOT_FOUND') {
+    return 'Your account does not exist. Please sign up if you do not have an account yet.'
+  }
+
+  if (code === 'EMAIL_NOT_VERIFIED') {
+    return 'Your account is not yet verified.'
+  }
+
   if (code === 'EMAIL_TAKEN' || (path.includes('/auth/sign-up') && statusCode === 409)) {
     return 'An account with this email already exists. Try signing in instead.'
+  }
+
+  if (code === 'INVALID_VERIFICATION') {
+    return 'This verification link is invalid or has expired.'
+  }
+
+  if (code === 'ACCOUNT_BLOCKED') {
+    return 'Your account has been temporarily suspended. Please contact support.'
+  }
+
+  if (code === 'RATE_LIMITED') {
+    return 'Please wait a moment before trying again.'
   }
 
   if (message?.includes('missing scope')) {
@@ -81,7 +117,12 @@ async function sendAuthRequest<TResponse>(
   path: string,
   options: {
     method?: 'GET' | 'POST'
-    payload?: SignInPayload | SignUpPayload | ForgotPasswordPayload | ResetPasswordPayload
+    payload?:
+      | SignInPayload
+      | SignUpPayload
+      | ForgotPasswordPayload
+      | ResetPasswordPayload
+      | VerifyEmailPayload
   } = {}
 ): Promise<TResponse> {
   let response: Response
@@ -130,7 +171,7 @@ export function signIn(payload: SignInPayload) {
 }
 
 export function signUp(payload: SignUpPayload) {
-  return sendAuthRequest<AuthSession>('/api/v1/auth/sign-up', {
+  return sendAuthRequest<AuthVerificationPendingResponse>('/api/v1/auth/sign-up', {
     payload,
   })
 }
@@ -149,6 +190,12 @@ export function forgotPassword(payload: ForgotPasswordPayload) {
 
 export function resetPassword(payload: ResetPasswordPayload) {
   return sendAuthRequest<AuthMessageResponse>('/api/v1/auth/reset-password', {
+    payload,
+  })
+}
+
+export function verifyEmail(payload: VerifyEmailPayload) {
+  return sendAuthRequest<AuthMessageResponse>('/api/v1/auth/verify-email', {
     payload,
   })
 }

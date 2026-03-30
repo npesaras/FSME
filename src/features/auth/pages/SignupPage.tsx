@@ -32,7 +32,6 @@ import {
   validatePasswordConfirmation,
   validateRequiredPassword,
 } from '../form-utils'
-import { getDefaultAuthenticatedPath } from '../session'
 
 export default function SignupPage() {
   const navigate = useNavigate()
@@ -70,14 +69,17 @@ export default function SignupPage() {
           return
         }
 
-        const { account } = await signUp({
+        const response = await signUp({
           name: normalizedName,
           email: normalizedEmail,
           password: value.password,
         })
 
         await navigate({
-          to: getDefaultAuthenticatedPath(account),
+          to: '/verify-email',
+          search: {
+            email: response.email,
+          },
           replace: true,
         })
       } catch (error) {

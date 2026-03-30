@@ -45,9 +45,10 @@ export default function LoginPage() {
     onSubmit: async ({ value }) => {
       try {
         clearSubmitError()
+        const normalizedEmail = normalizeEmailInput(value.email)
 
         const { account } = await signIn({
-          email: normalizeEmailInput(value.email),
+          email: normalizedEmail,
           password: value.password,
           remember: value.remember,
         })

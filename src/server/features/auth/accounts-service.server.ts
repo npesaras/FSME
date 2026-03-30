@@ -1,14 +1,14 @@
 import { ID, Query, type Models } from 'node-appwrite'
-import type { AuthAccount, AuthMessageResponse, AuthRole, AuthSession } from '#/features/auth/types'
+import type {
+  AuthAccount,
+  AuthMessageResponse,
+  AuthRole,
+  AuthSession,
+  AuthVerificationPendingResponse,
+} from '#/features/auth/types'
 import { AppError } from '../../shared/errors.server'
 import type { ServerLogger } from '../../types/logger'
-import {
-  createLegacyAccountsRepository,
-  normalizeEmail,
-  normalizeName,
-  parseLegacyScryptHash,
-  type LegacyAccount,
-} from './legacy-accounts.server'
+import { createUserProfilesRepository } from './user-profiles.server'
 
 const APP_ROLES: AuthRole[] = ['faculty', 'panelist']
 const DEFAULT_APP_ROLE: AuthRole = 'faculty'
@@ -19,23 +19,6 @@ type AccountsServiceDependencies = {
   users: {
     list: (options: { queries?: string[] }) => Promise<{ users: AppwriteUser[] }>
     get: (options: { userId: string }) => Promise<AppwriteUser>
-    create: (options: {
-      userId: string
-      email: string
-      password: string
-      name: string
-    }) => Promise<AppwriteUser>
-    createScryptUser: (options: {
-      userId: string
-      email: string
-      password: string
-      passwordSalt: string
-      passwordCpu: number
-      passwordMemory: number
-      passwordParallel: number
-      passwordLength: number
-      name: string
-    }) => Promise<AppwriteUser>
     updateStatus: (options: { userId: string; status: boolean }) => Promise<AppwriteUser>
     updateLabels: (options: { userId: string; labels: string[] }) => Promise<AppwriteUser>
     updatePrefs: (options: {
@@ -50,7 +33,14 @@ type AccountsServiceDependencies = {
     }) => Promise<{ secret?: string; expire?: string }>
   }
   createAuthAccount: () => {
+    create: (options: {
+      userId: string
+      email: string
+      password: string
+      name: string
+    }) => Promise<AppwriteUser>
     createRecovery: (options: { email: string; url: string }) => Promise<unknown>
+    updateEmailVerification: (options: { userId: string; secret: string }) => Promise<unknown>
     updateRecovery: (options: {
       userId: string
       secret: string
@@ -59,24 +49,44 @@ type AccountsServiceDependencies = {
   }
   createSessionAccount: (sessionSecret: string) => {
     get: () => Promise<AppwriteUser>
+    createEmailVerification: (options: { url: string }) => Promise<unknown>
     deleteSession: (options: { sessionId: string }) => Promise<unknown>
   }
   tablesDB: {
-    listRows: (options: {
+    listRows: <Row extends Models.Row = Models.DefaultRow>(options: {
       databaseId: string
       tableId: string
       queries?: string[]
-    }) => Promise<{ rows: unknown[]; total: number }>
-    getRow: (options: {
+      total?: boolean
+    }) => Promise<{ rows: Row[]; total: number }>
+    createRow: <Row extends Models.Row = Models.DefaultRow>(options: {
       databaseId: string
       tableId: string
       rowId: string
-    }) => Promise<unknown>
+      data: Record<string, unknown>
+      permissions?: string[]
+    }) => Promise<Row>
+    updateRow: <Row extends Models.Row = Models.DefaultRow>(options: {
+      databaseId: string
+      tableId: string
+      rowId: string
+      data: Record<string, unknown>
+      permissions?: string[]
+    }) => Promise<Row>
   }
   databaseId: string
-  tableId: string
+  userProfilesTableId: string
   recoveryOrigins: string[]
+  verificationOrigins: string[]
   logger?: ServerLogger
+}
+
+function normalizeEmail(email: string) {
+  return String(email).trim().toLowerCase()
+}
+
+function normalizeName(name: string) {
+  return String(name).trim().replace(/\s+/g, ' ')
 }
 
 function normalizeOrigin(origin: string) {
@@ -89,6 +99,44 @@ function normalizeOrigin(origin: string) {
 
 function isAppwriteErrorWithCode(error: unknown, expectedCode: number) {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === expectedCode
+}
+
+function getAppwriteErrorType(error: unknown) {
+  return typeof error === 'object' && error !== null && 'type' in error
+    ? error.type
+    : undefined
+}
+
+function isAppwriteRateLimitError(error: unknown) {
+  return isAppwriteErrorWithCode(error, 429) || getAppwriteErrorType(error) === 'general_rate_limit_exceeded'
+}
+
+function isInvalidCredentialsError(error: unknown) {
+  return (
+    isAppwriteErrorWithCode(error, 401) ||
+    isAppwriteErrorWithCode(error, 404) ||
+    getAppwriteErrorType(error) === 'user_invalid_credentials'
+  )
+}
+
+function isBlockedUserError(error: unknown) {
+  return getAppwriteErrorType(error) === 'user_blocked'
+}
+
+function toVerificationSendError(error: unknown) {
+  if (error instanceof AppError) {
+    return error
+  }
+
+  if (isAppwriteRateLimitError(error)) {
+    return new AppError(429, 'Please wait a moment before trying again.', {
+      code: 'RATE_LIMITED',
+    })
+  }
+
+  return new AppError(500, 'We could not send a verification email right now. Please try again.', {
+    code: 'VERIFICATION_SEND_FAILED',
+  })
 }
 
 function normalizeRole(role: unknown): AuthRole | null {
@@ -107,7 +155,7 @@ function getAppRoleLabels(user: AppwriteUser) {
     : []
 }
 
-function getAppRole(user: AppwriteUser, legacyAccount: LegacyAccount | null = null): AuthRole {
+function getAppRole(user: AppwriteUser): AuthRole {
   const labelRole = getAppRoleLabels(user)[0]
 
   if (labelRole) {
@@ -120,23 +168,18 @@ function getAppRole(user: AppwriteUser, legacyAccount: LegacyAccount | null = nu
     return prefsRole
   }
 
-  const legacyRole = normalizeRole(legacyAccount?.role)
-
-  if (legacyRole) {
-    return legacyRole
-  }
-
   return DEFAULT_APP_ROLE
 }
 
-function toPublicAccount(user: AppwriteUser, legacyAccount: LegacyAccount | null = null): AuthAccount {
+function toPublicAccount(user: AppwriteUser): AuthAccount {
   return {
     id: user.$id,
     name: user.name,
     email: user.email,
-    role: getAppRole(user, legacyAccount),
+    role: getAppRole(user),
     status: user.status ? 'active' : 'disabled',
     lastSignInAt: user.accessedAt || null,
+    emailVerified: user.emailVerification,
     createdAt: user.$createdAt,
     updatedAt: user.$updatedAt,
   }
@@ -149,56 +192,70 @@ export function createAccountsService({
   createSessionAccount,
   tablesDB,
   databaseId,
-  tableId,
+  userProfilesTableId,
   recoveryOrigins,
+  verificationOrigins,
   logger,
 }: AccountsServiceDependencies) {
-  const legacyAccounts = createLegacyAccountsRepository({
+  const userProfiles = createUserProfilesRepository({
     tablesDB,
     databaseId,
-    tableId,
+    tableId: userProfilesTableId,
     logger,
   })
   const allowedRecoveryOrigins = new Set(
     recoveryOrigins.map((origin) => normalizeOrigin(origin)).filter(Boolean)
   )
+  const allowedVerificationOrigins = new Set(
+    verificationOrigins.map((origin) => normalizeOrigin(origin)).filter(Boolean)
+  )
 
-  function assertRecoveryOrigin(origin: string) {
+  function assertAllowedOrigin({
+    origin,
+    allowedOrigins,
+    code,
+    message,
+    pathname,
+  }: {
+    origin: string
+    allowedOrigins: Set<string>
+    code: string
+    message: string
+    pathname: string
+  }) {
     const normalizedOrigin = normalizeOrigin(origin)
 
-    if (!normalizedOrigin || !allowedRecoveryOrigins.has(normalizedOrigin)) {
-      throw new AppError(400, 'Password recovery is not available from this origin.', {
-        code: 'INVALID_RECOVERY_ORIGIN',
+    if (!normalizedOrigin || !allowedOrigins.has(normalizedOrigin)) {
+      throw new AppError(400, message, {
+        code,
       })
     }
 
-    return `${normalizedOrigin}/reset-password`
+    return `${normalizedOrigin}${pathname}`
   }
 
-  function logLegacyConflict(
-    appwriteUser: AppwriteUser | null,
-    legacyAccount: LegacyAccount | null,
-    context: string
-  ) {
-    if (!appwriteUser || !legacyAccount || appwriteUser.$id === legacyAccount.$id) {
-      return false
-    }
-
-    logger?.warn?.(
-      {
-        context,
-        email: legacyAccount.email,
-        appwriteUserId: appwriteUser.$id,
-        legacyAccountId: legacyAccount.$id,
-      },
-      'Found mismatched legacy and Appwrite Auth account IDs for the same email. Preferring the Appwrite Auth user.'
-    )
-
-    return true
+  function assertRecoveryOrigin(origin: string) {
+    return assertAllowedOrigin({
+      origin,
+      allowedOrigins: allowedRecoveryOrigins,
+      code: 'INVALID_RECOVERY_ORIGIN',
+      message: 'Password recovery is not available from this origin.',
+      pathname: '/reset-password',
+    })
   }
 
-  async function syncAppRoleMetadata(user: AppwriteUser, legacyAccount: LegacyAccount | null = null) {
-    const targetRole = getAppRole(user, legacyAccount)
+  function assertVerificationOrigin(origin: string) {
+    return assertAllowedOrigin({
+      origin,
+      allowedOrigins: allowedVerificationOrigins,
+      code: 'INVALID_VERIFICATION_ORIGIN',
+      message: 'Email verification is not available from this origin.',
+      pathname: '/verify-email',
+    })
+  }
+
+  async function syncAppRoleMetadata(user: AppwriteUser) {
+    const targetRole = getAppRole(user)
     const existingLabels = Array.isArray(user.labels) ? user.labels : []
     const nonRoleLabels = existingLabels.filter((label) => !APP_ROLES.includes(label as AuthRole))
     const nextLabels = [...nonRoleLabels, targetRole]
@@ -269,109 +326,6 @@ export function createAccountsService({
     }
   }
 
-  async function importLegacyAccount(legacyAccount: LegacyAccount) {
-    const existingById = await getAuthUserById(legacyAccount.$id)
-
-    if (existingById) {
-      return existingById
-    }
-
-    const existingByEmail = await findAuthUserByEmail(legacyAccount.email)
-
-    if (existingByEmail) {
-      logLegacyConflict(existingByEmail, legacyAccount, 'import-legacy-account')
-      return existingByEmail
-    }
-
-    const password = parseLegacyScryptHash(legacyAccount.passwordHash)
-    let importedUser
-
-    try {
-      importedUser = await users.createScryptUser({
-        userId: legacyAccount.$id,
-        email: normalizeEmail(legacyAccount.email),
-        password: password.password,
-        passwordSalt: password.passwordSalt,
-        passwordCpu: password.passwordCpu,
-        passwordMemory: password.passwordMemory,
-        passwordParallel: password.passwordParallel,
-        passwordLength: password.passwordLength,
-        name: normalizeName(legacyAccount.name),
-      })
-    } catch (error) {
-      if (isAppwriteErrorWithCode(error, 409)) {
-        const racedUser = await findAuthUserByEmail(legacyAccount.email)
-
-        if (racedUser) {
-          logLegacyConflict(racedUser, legacyAccount, 'import-legacy-account-race')
-          return racedUser
-        }
-      }
-
-      throw error
-    }
-
-    if (legacyAccount.status && legacyAccount.status !== 'active') {
-      importedUser = await users.updateStatus({
-        userId: importedUser.$id,
-        status: false,
-      })
-    }
-
-    return syncAppRoleMetadata(importedUser, legacyAccount)
-  }
-
-  async function ensureAuthUserByEmail(email: string) {
-    const normalized = normalizeEmail(email)
-    const [appwriteUser, legacyAccount] = await Promise.all([
-      findAuthUserByEmail(normalized),
-      legacyAccounts.findByEmail(normalized),
-    ])
-
-    if (appwriteUser) {
-      logLegacyConflict(appwriteUser, legacyAccount, 'ensure-auth-user-by-email')
-      return syncAppRoleMetadata(appwriteUser, legacyAccount)
-    }
-
-    if (!legacyAccount) {
-      return null
-    }
-
-    return importLegacyAccount(legacyAccount)
-  }
-
-  async function ensureAuthUserById(accountId: string) {
-    const [appwriteUser, legacyAccount] = await Promise.all([
-      getAuthUserById(accountId),
-      legacyAccounts.findById(accountId),
-    ])
-
-    if (appwriteUser) {
-      return syncAppRoleMetadata(appwriteUser, legacyAccount)
-    }
-
-    if (!legacyAccount) {
-      return null
-    }
-
-    return importLegacyAccount(legacyAccount)
-  }
-
-  async function checkEmailExists(email: string) {
-    const normalizedEmail = normalizeEmail(email)
-    const [appwriteUser, legacyAccount] = await Promise.all([
-      findAuthUserByEmail(normalizedEmail),
-      legacyAccounts.findByEmail(normalizedEmail),
-    ])
-
-    if (appwriteUser) {
-      logLegacyConflict(appwriteUser, legacyAccount, 'check-email-exists')
-      return true
-    }
-
-    return Boolean(legacyAccount)
-  }
-
   async function getAccountBySessionSecret(sessionSecret: string) {
     try {
       const account = createSessionAccount(sessionSecret)
@@ -392,16 +346,40 @@ export function createAccountsService({
     }
   }
 
+  async function deleteCurrentSession(account: ReturnType<typeof createSessionAccount>) {
+    try {
+      await account.deleteSession({
+        sessionId: 'current',
+      })
+    } catch (error) {
+      if (!isAppwriteErrorWithCode(error, 401) && !isAppwriteErrorWithCode(error, 404)) {
+        throw error
+      }
+    }
+  }
+
   async function createSessionForCredentials({
     email,
     password,
+    origin,
   }: {
     email: string
     password: string
-  }): Promise<AuthSession & { session: { secret: string; expire: string } }> {
+    origin: string
+  }) {
     const normalizedEmail = normalizeEmail(email)
-    const user = await ensureAuthUserByEmail(normalizedEmail)
+    const existingUser = await findAuthUserByEmail(normalizedEmail)
     let session
+
+    if (!existingUser) {
+      throw new AppError(
+        404,
+        'Your account does not exist. Please sign up if you do not have an account yet.',
+        {
+          code: 'ACCOUNT_NOT_FOUND',
+        }
+      )
+    }
 
     try {
       const account = createAdminAccount()
@@ -410,9 +388,21 @@ export function createAccountsService({
         password,
       })
     } catch (error) {
-      if (isAppwriteErrorWithCode(error, 401) || isAppwriteErrorWithCode(error, 404)) {
+      if (isInvalidCredentialsError(error)) {
         throw new AppError(401, 'Invalid email or password.', {
           code: 'INVALID_CREDENTIALS',
+        })
+      }
+
+      if (isBlockedUserError(error)) {
+        throw new AppError(403, 'Your account has been temporarily suspended. Please contact support.', {
+          code: 'ACCOUNT_BLOCKED',
+        })
+      }
+
+      if (isAppwriteRateLimitError(error)) {
+        throw new AppError(429, 'Please wait a moment before trying again.', {
+          code: 'RATE_LIMITED',
         })
       }
 
@@ -425,25 +415,64 @@ export function createAccountsService({
       })
     }
 
-    if (!user) {
-      throw new AppError(401, 'We could not find an account for that email address.', {
-        code: 'INVALID_CREDENTIALS',
-      })
+    const sessionAccount = createSessionAccount(session.secret)
+    const user = await sessionAccount.get()
+    const syncedUser = await syncAppRoleMetadata(user)
+
+    if (!syncedUser.emailVerification) {
+      let verificationError: unknown = null
+
+      try {
+        await sessionAccount.createEmailVerification({
+          url: assertVerificationOrigin(origin),
+        })
+      } catch (error) {
+        verificationError = error
+      } finally {
+        await deleteCurrentSession(sessionAccount)
+      }
+
+      if (verificationError && !isAppwriteRateLimitError(verificationError)) {
+        throw toVerificationSendError(verificationError)
+      }
+
+      throw new AppError(
+        403,
+        'Your account is not yet verified.',
+        {
+          code: 'EMAIL_NOT_VERIFIED',
+        }
+      )
     }
 
+    await userProfiles.upsertVerifiedProfile({
+      userId: syncedUser.$id,
+      fullName: normalizeName(syncedUser.name),
+      role: getAppRole(syncedUser),
+    })
+
     return {
-      account: toPublicAccount(user),
+      account: toPublicAccount(syncedUser),
       session: {
         secret: session.secret,
         expire: session.expire,
       },
+      sessionAccount,
+      user: syncedUser,
     }
   }
 
   return {
-    async checkEmailExists({ email }: { email: string }) {
+    async checkEmailStatus({ email }: { email: string }) {
+      const user = await findAuthUserByEmail(normalizeEmail(email))
+
       return {
-        exists: await checkEmailExists(email),
+        exists: Boolean(user),
+        verificationStatus: user
+          ? user.emailVerification
+            ? 'verified'
+            : 'unverified'
+          : 'missing',
       }
     },
 
@@ -451,42 +480,70 @@ export function createAccountsService({
       name,
       email,
       password,
+      origin,
     }: {
       name: string
       email: string
       password: string
-    }): Promise<AuthSession & { session: { secret: string; expire: string } }> {
+      origin: string
+    }): Promise<AuthVerificationPendingResponse> {
       const normalizedEmail = normalizeEmail(email)
       const normalizedName = normalizeName(name)
-      const [existingUser, legacyAccount] = await Promise.all([
-        findAuthUserByEmail(normalizedEmail),
-        legacyAccounts.findByEmail(normalizedEmail),
-      ])
+      const existingUser = await findAuthUserByEmail(normalizedEmail)
 
-      if (existingUser || legacyAccount) {
+      if (existingUser) {
         throw new AppError(409, 'An account with that email already exists.', {
           code: 'EMAIL_TAKEN',
         })
       }
 
       try {
-        const createdUser = await users.create({
+        const account = createAuthAccount()
+        const createdUser = await account.create({
           userId: ID.unique(),
           email: normalizedEmail,
           password,
           name: normalizedName,
         })
-
-        await syncAppRoleMetadata(createdUser)
-
-        return createSessionForCredentials({
+        const syncedUser = await syncAppRoleMetadata(createdUser)
+        const session = await createAdminAccount().createEmailPasswordSession({
           email: normalizedEmail,
           password,
         })
+
+        if (!session?.secret) {
+          throw new AppError(500, 'We could not prepare email verification. Please try again.', {
+            code: 'SESSION_CREATION_FAILED',
+          })
+        }
+
+        const sessionAccount = createSessionAccount(session.secret)
+
+        try {
+          await sessionAccount.createEmailVerification({
+            url: assertVerificationOrigin(origin),
+          })
+        } catch (error) {
+          throw toVerificationSendError(error)
+        } finally {
+          await deleteCurrentSession(sessionAccount)
+        }
+
+        return {
+          email: normalizedEmail,
+          message: `We sent a verification email to ${syncedUser.email}. Verify your account before signing in.`,
+          verificationRequired: true,
+        }
       } catch (error) {
         if (isAppwriteErrorWithCode(error, 409)) {
           throw new AppError(409, 'An account with that email already exists.', {
             code: 'EMAIL_TAKEN',
+          })
+        }
+
+        if (isAppwriteRateLimitError(error)) {
+          throw new AppError(429, 'Please wait a moment before trying again.', {
+            code: 'RATE_LIMITED',
           })
         }
 
@@ -497,11 +554,64 @@ export function createAccountsService({
     async signIn({
       email,
       password,
+      origin,
     }: {
       email: string
       password: string
+      origin: string
     }): Promise<AuthSession & { session: { secret: string; expire: string } }> {
-      return createSessionForCredentials({ email, password })
+      const { account, session } = await createSessionForCredentials({ email, password, origin })
+
+      return {
+        account,
+        session,
+      }
+    },
+
+    async completeEmailVerification({
+      userId,
+      secret,
+    }: {
+      userId: string
+      secret: string
+    }): Promise<AuthMessageResponse> {
+      try {
+        const account = createAuthAccount()
+        await account.updateEmailVerification({
+          userId,
+          secret,
+        })
+      } catch (error) {
+        if (isInvalidCredentialsError(error)) {
+          throw new AppError(400, 'This email verification link is invalid or has expired.', {
+            code: 'INVALID_VERIFICATION',
+          })
+        }
+
+        if (isAppwriteRateLimitError(error)) {
+          throw new AppError(429, 'Please wait a moment before trying again.', {
+            code: 'RATE_LIMITED',
+          })
+        }
+
+        throw error
+      }
+
+      const verifiedUser = await syncAppRoleMetadata(
+        (await users.get({
+          userId,
+        })) as AppwriteUser
+      )
+
+      await userProfiles.upsertVerifiedProfile({
+        userId: verifiedUser.$id,
+        fullName: normalizeName(verifiedUser.name),
+        role: getAppRole(verifiedUser),
+      })
+
+      return {
+        message: 'Email verified successfully. You can now sign in.',
+      }
     },
 
     async forgotPassword({
@@ -513,7 +623,7 @@ export function createAccountsService({
     }): Promise<AuthMessageResponse> {
       const normalizedEmail = normalizeEmail(email)
       const recoveryUrl = assertRecoveryOrigin(origin)
-      const user = await ensureAuthUserByEmail(normalizedEmail)
+      const user = await findAuthUserByEmail(normalizedEmail)
 
       if (user) {
         try {
@@ -527,6 +637,12 @@ export function createAccountsService({
             return {
               message: 'If an account exists for that email, reset instructions have been sent.',
             }
+          }
+
+          if (isAppwriteRateLimitError(error)) {
+            throw new AppError(429, 'Please wait a moment before trying again.', {
+              code: 'RATE_LIMITED',
+            })
           }
 
           throw error
@@ -561,6 +677,12 @@ export function createAccountsService({
           })
         }
 
+        if (isAppwriteRateLimitError(error)) {
+          throw new AppError(429, 'Please wait a moment before trying again.', {
+            code: 'RATE_LIMITED',
+          })
+        }
+
         throw error
       }
 
@@ -570,23 +692,28 @@ export function createAccountsService({
     },
 
     async getCurrentAccount(sessionSecret: string) {
-      const { user } = await getAccountBySessionSecret(sessionSecret)
-      const resolvedUser = await ensureAuthUserById(user.$id)
+      const { account, user } = await getAccountBySessionSecret(sessionSecret)
+      const syncedUser = await syncAppRoleMetadata(user)
 
-      return toPublicAccount(resolvedUser || user)
+      if (!syncedUser.emailVerification) {
+        await deleteCurrentSession(account)
+
+        throw new AppError(401, 'Authentication required.', {
+          code: 'UNAUTHORIZED',
+        })
+      }
+
+      await userProfiles.upsertVerifiedProfile({
+        userId: syncedUser.$id,
+        fullName: normalizeName(syncedUser.name),
+        role: getAppRole(syncedUser),
+      })
+
+      return toPublicAccount(syncedUser)
     },
 
     async signOut(sessionSecret: string): Promise<AuthMessageResponse> {
-      try {
-        const account = createSessionAccount(sessionSecret)
-        await account.deleteSession({
-          sessionId: 'current',
-        })
-      } catch (error) {
-        if (!isAppwriteErrorWithCode(error, 401) && !isAppwriteErrorWithCode(error, 404)) {
-          throw error
-        }
-      }
+      await deleteCurrentSession(createSessionAccount(sessionSecret))
 
       return {
         message: 'Signed out successfully.',
@@ -594,9 +721,9 @@ export function createAccountsService({
     },
 
     async getById(accountId: string) {
-      const user = await ensureAuthUserById(accountId)
+      const user = await getAuthUserById(accountId)
 
-      return user ? toPublicAccount(user) : null
+      return user ? toPublicAccount(await syncAppRoleMetadata(user)) : null
     },
   }
 }

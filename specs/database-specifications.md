@@ -87,7 +87,7 @@ erDiagram
 ### `user_profiles`
 - `user_id` (`varchar`, required, indexed, unique)
 - `full_name` (`varchar`, required)
-- `role` (`varchar`, required, enum: `faculty_applicant` | `panelist_checker`)
+- `role` (`varchar`, required, enum: `faculty` | `panelist`)
 - `department` (`varchar`, optional)
 - `college_or_office` (`varchar`, optional)
 - `employee_no` (`varchar`, optional)

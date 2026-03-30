@@ -18,6 +18,7 @@ import { Route as PanelistChatRouteImport } from './routes/panelist/chat'
 import { Route as FacultyDocumentsRouteImport } from './routes/faculty/documents'
 import { Route as FacultyChatRouteImport } from './routes/faculty/chat'
 import { Route as FacultyApplicationsRouteImport } from './routes/faculty/applications'
+import { Route as publicVerifyEmailRouteImport } from './routes/(public)/verify-email'
 import { Route as publicSignupRouteImport } from './routes/(public)/signup'
 import { Route as publicSignInRouteImport } from './routes/(public)/sign-in'
 import { Route as publicResetSuccessRouteImport } from './routes/(public)/reset-success'
@@ -25,6 +26,7 @@ import { Route as publicResetPasswordRouteImport } from './routes/(public)/reset
 import { Route as publicHomeRouteImport } from './routes/(public)/home'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
+import { Route as ApiV1AuthVerifyEmailRouteImport } from './routes/api/v1/auth/verify-email'
 import { Route as ApiV1AuthSignUpRouteImport } from './routes/api/v1/auth/sign-up'
 import { Route as ApiV1AuthSignOutRouteImport } from './routes/api/v1/auth/sign-out'
 import { Route as ApiV1AuthSignInRouteImport } from './routes/api/v1/auth/sign-in'
@@ -80,6 +82,11 @@ const FacultyApplicationsRoute = FacultyApplicationsRouteImport.update({
   path: '/faculty/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const publicVerifyEmailRoute = publicVerifyEmailRouteImport.update({
+  id: '/(public)/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const publicSignupRoute = publicSignupRouteImport.update({
   id: '/(public)/signup',
   path: '/signup',
@@ -113,6 +120,11 @@ const publicForgotPasswordRoute = publicForgotPasswordRouteImport.update({
 const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
   id: '/api/v1/health',
   path: '/api/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AuthVerifyEmailRoute = ApiV1AuthVerifyEmailRouteImport.update({
+  id: '/api/v1/auth/verify-email',
+  path: '/api/v1/auth/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1AuthSignUpRoute = ApiV1AuthSignUpRouteImport.update({
@@ -168,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/reset-success': typeof publicResetSuccessRoute
   '/sign-in': typeof publicSignInRoute
   '/signup': typeof publicSignupRoute
+  '/verify-email': typeof publicVerifyEmailRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
@@ -187,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/auth/sign-in': typeof ApiV1AuthSignInRoute
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
+  '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof publicForgotPasswordRoute
@@ -195,6 +209,7 @@ export interface FileRoutesByTo {
   '/reset-success': typeof publicResetSuccessRoute
   '/sign-in': typeof publicSignInRoute
   '/signup': typeof publicSignupRoute
+  '/verify-email': typeof publicVerifyEmailRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
@@ -214,6 +229,7 @@ export interface FileRoutesByTo {
   '/api/v1/auth/sign-in': typeof ApiV1AuthSignInRoute
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
+  '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -223,6 +239,7 @@ export interface FileRoutesById {
   '/(public)/reset-success': typeof publicResetSuccessRoute
   '/(public)/sign-in': typeof publicSignInRoute
   '/(public)/signup': typeof publicSignupRoute
+  '/(public)/verify-email': typeof publicVerifyEmailRoute
   '/faculty/applications': typeof FacultyApplicationsRoute
   '/faculty/chat': typeof FacultyChatRoute
   '/faculty/documents': typeof FacultyDocumentsRoute
@@ -242,6 +259,7 @@ export interface FileRoutesById {
   '/api/v1/auth/sign-in': typeof ApiV1AuthSignInRoute
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
+  '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -252,6 +270,7 @@ export interface FileRouteTypes {
     | '/reset-success'
     | '/sign-in'
     | '/signup'
+    | '/verify-email'
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
@@ -271,6 +290,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-in'
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
+    | '/api/v1/auth/verify-email'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -279,6 +299,7 @@ export interface FileRouteTypes {
     | '/reset-success'
     | '/sign-in'
     | '/signup'
+    | '/verify-email'
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
@@ -298,6 +319,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-in'
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
+    | '/api/v1/auth/verify-email'
   id:
     | '__root__'
     | '/(public)/forgot-password'
@@ -306,6 +328,7 @@ export interface FileRouteTypes {
     | '/(public)/reset-success'
     | '/(public)/sign-in'
     | '/(public)/signup'
+    | '/(public)/verify-email'
     | '/faculty/applications'
     | '/faculty/chat'
     | '/faculty/documents'
@@ -325,6 +348,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-in'
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
+    | '/api/v1/auth/verify-email'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +358,7 @@ export interface RootRouteChildren {
   publicResetSuccessRoute: typeof publicResetSuccessRoute
   publicSignInRoute: typeof publicSignInRoute
   publicSignupRoute: typeof publicSignupRoute
+  publicVerifyEmailRoute: typeof publicVerifyEmailRoute
   FacultyApplicationsRoute: typeof FacultyApplicationsRoute
   FacultyChatRoute: typeof FacultyChatRoute
   FacultyDocumentsRoute: typeof FacultyDocumentsRoute
@@ -353,6 +378,7 @@ export interface RootRouteChildren {
   ApiV1AuthSignInRoute: typeof ApiV1AuthSignInRoute
   ApiV1AuthSignOutRoute: typeof ApiV1AuthSignOutRoute
   ApiV1AuthSignUpRoute: typeof ApiV1AuthSignUpRoute
+  ApiV1AuthVerifyEmailRoute: typeof ApiV1AuthVerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -420,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FacultyApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(public)/verify-email': {
+      id: '/(public)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof publicVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(public)/signup': {
       id: '/(public)/signup'
       path: '/signup'
@@ -467,6 +500,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/health'
       fullPath: '/api/v1/health'
       preLoaderRoute: typeof ApiV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/auth/verify-email': {
+      id: '/api/v1/auth/verify-email'
+      path: '/api/v1/auth/verify-email'
+      fullPath: '/api/v1/auth/verify-email'
+      preLoaderRoute: typeof ApiV1AuthVerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/auth/sign-up': {
@@ -542,6 +582,7 @@ const rootRouteChildren: RootRouteChildren = {
   publicResetSuccessRoute: publicResetSuccessRoute,
   publicSignInRoute: publicSignInRoute,
   publicSignupRoute: publicSignupRoute,
+  publicVerifyEmailRoute: publicVerifyEmailRoute,
   FacultyApplicationsRoute: FacultyApplicationsRoute,
   FacultyChatRoute: FacultyChatRoute,
   FacultyDocumentsRoute: FacultyDocumentsRoute,
@@ -561,6 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1AuthSignInRoute: ApiV1AuthSignInRoute,
   ApiV1AuthSignOutRoute: ApiV1AuthSignOutRoute,
   ApiV1AuthSignUpRoute: ApiV1AuthSignUpRoute,
+  ApiV1AuthVerifyEmailRoute: ApiV1AuthVerifyEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

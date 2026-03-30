@@ -13,8 +13,9 @@ export const authRuntime = {
     createSessionAccount: appwrite.createSessionAccount,
     tablesDB: appwrite.tablesDB,
     databaseId: config.appwrite.databaseId,
-    tableId: config.appwrite.accountsTableId,
+    userProfilesTableId: config.appwrite.userProfilesTableId,
     recoveryOrigins: config.appwrite.recoveryOrigins,
+    verificationOrigins: config.appwrite.verificationOrigins,
     logger: console,
   }),
 }

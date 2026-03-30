@@ -29,11 +29,11 @@ src/server/
     auth/
       accounts-service.server.ts
       cookies.server.ts
-      legacy-accounts.server.ts
       passwords.server.ts
       routes.server.ts
       runtime.server.ts
       schemas.ts
+      user-profiles.server.ts
 ```
 
 ## Conventions

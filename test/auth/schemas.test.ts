@@ -4,6 +4,7 @@ import {
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
+  verifyEmailSchema,
 } from '../../src/server/features/auth/schemas'
 
 describe('auth request schemas', () => {
@@ -56,6 +57,15 @@ describe('auth request schemas', () => {
     const result = forgotPasswordSchema.safeParse({
       email: 'faculty@example.com',
       origin: '',
+    })
+
+    expect(result.success).toBe(false)
+  })
+
+  it('requires a user id and secret for email verification requests', () => {
+    const result = verifyEmailSchema.safeParse({
+      userId: '',
+      secret: '',
     })
 
     expect(result.success).toBe(false)

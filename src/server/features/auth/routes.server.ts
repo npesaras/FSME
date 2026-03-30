@@ -11,6 +11,7 @@ import {
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
+  verifyEmailSchema,
 } from './schemas'
 import { createResponseHeaders, parseJsonRequest } from '../../utils/http.server'
 
@@ -22,7 +23,7 @@ export async function handleHealthRequest(runtime: AuthRuntime = authRuntime) {
       envPaths: runtime.config.envPaths,
       appwrite: {
         databaseId: runtime.config.appwrite.databaseId,
-        accountsTableId: runtime.config.appwrite.accountsTableId,
+        userProfilesTableId: runtime.config.appwrite.userProfilesTableId,
       },
     })
   } catch (error) {
@@ -62,22 +63,16 @@ export async function handleAppwriteTablesRequest(runtime: AuthRuntime = authRun
 export async function handleSignUpRequest(request: Request, runtime: AuthRuntime = authRuntime) {
   try {
     const payload = await parseJsonRequest(request, signUpSchema)
-    const { account, session } = await runtime.accounts.signUp(payload)
+    const response = await runtime.accounts.signUp({
+      name: payload.name,
+      email: payload.email,
+      password: payload.password,
+      origin: new URL(request.url).origin,
+    })
 
-    return jsonResponse(
-      {
-        account,
-      },
-      {
-        status: 201,
-        headers: createResponseHeaders({
-          'set-cookie': createSessionCookieHeader(session.secret, {
-            rememberSession: payload.remember !== false,
-            expiresAt: session.expire,
-          }),
-        }),
-      }
-    )
+    return jsonResponse(response, {
+      status: 201,
+    })
   } catch (error) {
     return errorResponse(error)
   }
@@ -89,7 +84,7 @@ export async function handleEmailStatusRequest(
 ) {
   try {
     const payload = await parseJsonRequest(request, emailStatusSchema)
-    const result = await runtime.accounts.checkEmailExists(payload)
+    const result = await runtime.accounts.checkEmailStatus(payload)
 
     return jsonResponse(result)
   } catch (error) {
@@ -100,7 +95,11 @@ export async function handleEmailStatusRequest(
 export async function handleSignInRequest(request: Request, runtime: AuthRuntime = authRuntime) {
   try {
     const payload = await parseJsonRequest(request, signInSchema)
-    const { account, session } = await runtime.accounts.signIn(payload)
+    const { account, session } = await runtime.accounts.signIn({
+      email: payload.email,
+      password: payload.password,
+      origin: new URL(request.url).origin,
+    })
 
     return jsonResponse(
       {
@@ -115,6 +114,20 @@ export async function handleSignInRequest(request: Request, runtime: AuthRuntime
         }),
       }
     )
+  } catch (error) {
+    return errorResponse(error)
+  }
+}
+
+export async function handleVerifyEmailRequest(
+  request: Request,
+  runtime: AuthRuntime = authRuntime
+) {
+  try {
+    const payload = await parseJsonRequest(request, verifyEmailSchema)
+    const response = await runtime.accounts.completeEmailVerification(payload)
+
+    return jsonResponse(response)
   } catch (error) {
     return errorResponse(error)
   }

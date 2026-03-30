@@ -25,57 +25,6 @@ export const panelOutcomes = [
 export type PanelOutcome = (typeof panelOutcomes)[number]
 
 export const appwriteTableSchemas = {
-  accounts: {
-    id: 'accounts',
-    name: 'Accounts',
-    status: 'live',
-    description:
-      'Legacy account records used for migration and fallback auth compatibility.',
-    columns: [
-      {
-        key: 'name',
-        kind: 'varchar',
-        required: true,
-        size: 255,
-        description: 'Display name for the legacy account row.',
-      },
-      {
-        key: 'email',
-        kind: 'varchar',
-        required: true,
-        size: 255,
-        description: 'Normalized email address used to match legacy accounts.',
-      },
-      {
-        key: 'passwordHash',
-        kind: 'varchar',
-        required: true,
-        size: 1024,
-        description: 'Legacy scrypt hash used only during auth migration.',
-      },
-      {
-        key: 'status',
-        kind: 'varchar',
-        required: true,
-        size: 64,
-        description: 'Legacy account status marker.',
-      },
-      {
-        key: 'lastSignInAt',
-        kind: 'datetime',
-        required: false,
-        description: 'Most recent legacy sign-in timestamp.',
-      },
-    ],
-    indexes: [
-      {
-        key: 'accounts_email',
-        type: 'key',
-        columns: ['email'],
-        orders: ['asc'],
-      },
-    ],
-  },
   documentTracking: {
     id: 'document_tracking',
     name: 'Document Tracking',
@@ -218,12 +167,31 @@ export const appwriteTableSchemas = {
   userProfiles: {
     id: 'user_profiles',
     name: 'User Profiles',
-    status: 'planned',
-    description: 'Profile metadata and role data linked to an authenticated account.',
+    status: 'live',
+    description:
+      'Verified user profile metadata mirrored from Appwrite Auth and used for app-side RBAC/profile data.',
     columns: [
-      { key: 'user_id', kind: 'varchar', required: true, size: 255 },
-      { key: 'full_name', kind: 'varchar', required: true, size: 255 },
-      { key: 'role', kind: 'enum', required: true, elements: appRoles },
+      {
+        key: 'user_id',
+        kind: 'varchar',
+        required: true,
+        size: 255,
+        description: 'Appwrite Auth user ID for the verified account.',
+      },
+      {
+        key: 'full_name',
+        kind: 'varchar',
+        required: true,
+        size: 255,
+        description: 'Verified display name mirrored from the Appwrite Auth profile.',
+      },
+      {
+        key: 'role',
+        kind: 'enum',
+        required: true,
+        elements: appRoles,
+        description: 'Mirrored application role. New signups default to faculty.',
+      },
       { key: 'department', kind: 'varchar', required: false, size: 255 },
       { key: 'college_or_office', kind: 'varchar', required: false, size: 255 },
       { key: 'employee_no', kind: 'varchar', required: false, size: 255 },

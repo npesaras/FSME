@@ -5,7 +5,7 @@ import {
   assertAccountAccess,
   requireCurrentAccountFromRequest,
 } from '#/server/features/auth/current-account.server'
-import { listDocumentTrackingRecordsForFaculty } from '#/server/features/faculty/document-tracking.server'
+import { listDocumentTrackingRecordsForAccount } from '#/server/features/shared/document-tracking.server'
 import type { DocumentTrackingRecord } from './document-tracking'
 
 const documentTrackingInputSchema = z.object({
@@ -23,5 +23,5 @@ export const getDocumentTrackingServerFn = createServerFn({ method: 'GET' })
       'You are not allowed to view these records.',
     )
 
-    return listDocumentTrackingRecordsForFaculty(account.id)
+    return listDocumentTrackingRecordsForAccount(account.id)
   })

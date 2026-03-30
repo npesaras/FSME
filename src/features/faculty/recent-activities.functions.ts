@@ -5,7 +5,7 @@ import {
   assertAccountAccess,
   requireCurrentAccountFromRequest,
 } from '#/server/features/auth/current-account.server'
-import { listRecentActivitiesForFaculty } from '#/server/features/faculty/recent-activities.server'
+import { listRecentActivitiesForAccount } from '#/server/features/shared/recent-activities.server'
 import type { RecentActivityRecord } from './recent-activities'
 
 const recentActivitiesInputSchema = z.object({
@@ -23,5 +23,5 @@ export const getRecentActivitiesServerFn = createServerFn({ method: 'GET' })
       'You are not allowed to view these activities.',
     )
 
-    return listRecentActivitiesForFaculty(account.id)
+    return listRecentActivitiesForAccount(account.id)
   })

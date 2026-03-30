@@ -357,6 +357,21 @@ export function createAccountsService({
     return importLegacyAccount(legacyAccount)
   }
 
+  async function checkEmailExists(email: string) {
+    const normalizedEmail = normalizeEmail(email)
+    const [appwriteUser, legacyAccount] = await Promise.all([
+      findAuthUserByEmail(normalizedEmail),
+      legacyAccounts.findByEmail(normalizedEmail),
+    ])
+
+    if (appwriteUser) {
+      logLegacyConflict(appwriteUser, legacyAccount, 'check-email-exists')
+      return true
+    }
+
+    return Boolean(legacyAccount)
+  }
+
   async function getAccountBySessionSecret(sessionSecret: string) {
     try {
       const account = createSessionAccount(sessionSecret)
@@ -426,6 +441,12 @@ export function createAccountsService({
   }
 
   return {
+    async checkEmailExists({ email }: { email: string }) {
+      return {
+        exists: await checkEmailExists(email),
+      }
+    },
+
     async signUp({
       name,
       email,

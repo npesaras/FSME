@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail, User } from 'lucide-react'
@@ -18,16 +18,31 @@ import {
   authLinkClassName,
   authSocialButtonClassName,
 } from '../components/authClassNames'
-import { AuthApiError, signUp } from '../api'
+import { signUp } from '../api'
+import {
+  existingAccountMessage,
+  getAuthPageErrorMessage,
+  normalizeEmailInput,
+  normalizeNameInput,
+  useEmailAvailability,
+  useGuardedFormSubmit,
+  validateAcceptedTerms,
+  validateEmailInput,
+  validateFullName,
+  validatePasswordConfirmation,
+  validateRequiredPassword,
+} from '../form-utils'
 import { getDefaultAuthenticatedPath } from '../session'
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function SignupPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const { emailAvailability, checkEmailExists, trackEmailInput } = useEmailAvailability()
+  const clearSubmitError = useCallback(() => {
+    setSubmitError((current) => (current ? null : current))
+  }, [])
   const form = useForm({
     defaultValues: {
       name: '',
@@ -38,26 +53,39 @@ export default function SignupPage() {
     },
     onSubmit: async ({ value }) => {
       try {
-        setSubmitError(null)
+        clearSubmitError()
+
+        const normalizedEmail = normalizeEmailInput(value.email)
+        const normalizedName = normalizeNameInput(value.name)
+        const emailExists =
+          emailAvailability.email === normalizedEmail && emailAvailability.status === 'exists'
+            ? true
+            : emailAvailability.email === normalizedEmail &&
+                emailAvailability.status === 'available'
+              ? false
+              : await checkEmailExists(normalizedEmail)
+
+        if (emailExists) {
+          setSubmitError(existingAccountMessage)
+          return
+        }
 
         const { account } = await signUp({
-          name: value.name,
-          email: value.email,
+          name: normalizedName,
+          email: normalizedEmail,
           password: value.password,
         })
-        navigate({
+
+        await navigate({
           to: getDefaultAuthenticatedPath(account),
           replace: true,
         })
       } catch (error) {
-        setSubmitError(
-          error instanceof AuthApiError
-            ? error.message
-            : 'Unable to create your account right now. Please try again.'
-        )
+        setSubmitError(getAuthPageErrorMessage(error, 'Unable to create your account right now. Please try again.'))
       }
     },
   })
+  const handleFormSubmit = useGuardedFormSubmit(() => form.handleSubmit())
 
   return (
     <AuthSplitLayout
@@ -101,11 +129,7 @@ export default function SignupPage() {
 
       <form
         noValidate
-        onSubmit={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          void form.handleSubmit()
-        }}
+        onSubmit={handleFormSubmit}
         className="space-y-4"
       >
         {submitError ? (
@@ -117,17 +141,7 @@ export default function SignupPage() {
         <form.Field
           name="name"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'Name is required'
-              }
-
-              if (value.trim().length < 2) {
-                return 'Enter your full name'
-              }
-
-              return undefined
-            },
+            onChange: ({ value }) => validateFullName(value),
           }}
         >
           {(field) => {
@@ -146,7 +160,10 @@ export default function SignupPage() {
                     autoComplete="name"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.value)
+                    }}
                     className={authCompactInputClassName}
                     placeholder="Enter your name"
                   />
@@ -165,21 +182,29 @@ export default function SignupPage() {
         <form.Field
           name="email"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'Email is required'
-              }
+            onChange: ({ value }) => validateEmailInput(value),
+            onBlurAsyncDebounceMs: 250,
+            onBlurAsync: async ({ value }) => {
+              const emailExists = await checkEmailExists(value)
 
-              if (!emailPattern.test(value)) {
-                return 'Enter a valid email address'
-              }
-
-              return undefined
+              return emailExists ? existingAccountMessage : undefined
             },
           }}
         >
           {(field) => {
             const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined
+            const normalizedEmail = normalizeEmailInput(field.state.value)
+            const hasExistingAccountError = error === existingAccountMessage
+            const isCheckingEmail =
+              field.state.meta.isTouched &&
+              field.state.meta.isValidating &&
+              emailAvailability.email === normalizedEmail &&
+              emailAvailability.status === 'checking'
+            const hasExistingAccount =
+              !hasExistingAccountError &&
+              field.state.meta.isTouched &&
+              emailAvailability.email === normalizedEmail &&
+              emailAvailability.status === 'exists'
 
             return (
               <div className="space-y-1.5">
@@ -192,9 +217,17 @@ export default function SignupPage() {
                     name={field.name}
                     type="email"
                     autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onBlur={() => {
+                      field.handleBlur()
+                    }}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      trackEmailInput(event.target.value)
+                      field.handleChange(event.target.value)
+                    }}
                     className={authCompactInputClassName}
                     placeholder="Enter your email"
                   />
@@ -202,8 +235,22 @@ export default function SignupPage() {
                     <Mail className={authCompactTrailingIconClassName} />
                   </div>
                 </div>
-                {error ? (
+                {error && !hasExistingAccountError ? (
                   <p className={authCompactErrorTextClassName}>{String(error)}</p>
+                ) : null}
+                {!error && isCheckingEmail ? (
+                  <p className="text-[13px] font-medium text-muted-foreground">
+                    Checking if this email already exists...
+                  </p>
+                ) : null}
+                {hasExistingAccountError || hasExistingAccount ? (
+                  <p className={authCompactErrorTextClassName}>
+                    This email is already registered.{' '}
+                    <Link to="/sign-in" className={authLinkClassName}>
+                      Sign in instead
+                    </Link>
+                    .
+                  </p>
                 ) : null}
               </div>
             )
@@ -213,13 +260,7 @@ export default function SignupPage() {
         <form.Field
           name="password"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'Password is required'
-              }
-
-              return undefined
-            },
+            onChange: ({ value }) => validateRequiredPassword(value),
           }}
         >
           {(field) => {
@@ -238,7 +279,10 @@ export default function SignupPage() {
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.value)
+                    }}
                     className={authCompactInputClassName}
                     placeholder="Enter your password"
                   />
@@ -266,17 +310,8 @@ export default function SignupPage() {
           name="confirmPassword"
           validators={{
             onChangeListenTo: ['password'],
-            onChange: ({ value, fieldApi }) => {
-              if (!value) {
-                return 'Confirm your password'
-              }
-
-              if (value !== fieldApi.form.getFieldValue('password')) {
-                return 'Passwords do not match'
-              }
-
-              return undefined
-            },
+            onChange: ({ value, fieldApi }) =>
+              validatePasswordConfirmation(value, fieldApi.form.getFieldValue('password')),
           }}
         >
           {(field) => {
@@ -295,7 +330,10 @@ export default function SignupPage() {
                     autoComplete="new-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.value)
+                    }}
                     className={authCompactInputClassName}
                     placeholder="Confirm your password"
                   />
@@ -322,13 +360,7 @@ export default function SignupPage() {
         <form.Field
           name="terms"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'You must agree to Terms & Privacy'
-              }
-
-              return undefined
-            },
+            onChange: ({ value }) => validateAcceptedTerms(value),
           }}
         >
           {(field) => {
@@ -343,7 +375,10 @@ export default function SignupPage() {
                     type="checkbox"
                     checked={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.checked)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.checked)
+                    }}
                     className={authCompactCheckboxClassName}
                   />
                   <label
@@ -370,10 +405,19 @@ export default function SignupPage() {
           {([canSubmit, isSubmitting]) => (
             <button
               type="submit"
-              disabled={!canSubmit || isSubmitting}
+              disabled={
+                !canSubmit ||
+                isSubmitting ||
+                emailAvailability.status === 'checking' ||
+                emailAvailability.status === 'exists'
+              }
               className={authCompactPrimaryButtonClassName}
             >
-              {isSubmitting ? 'Signing Up...' : 'Sign Up'}
+              {isSubmitting
+                ? 'Signing Up...'
+                : emailAvailability.status === 'checking'
+                  ? 'Checking Email...'
+                  : 'Sign Up'}
             </button>
           )}
         </form.Subscribe>

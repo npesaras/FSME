@@ -6,6 +6,7 @@ import {
   jsonResponse,
 } from '../../shared/errors.server'
 import {
+  emailStatusSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   signInSchema,
@@ -77,6 +78,20 @@ export async function handleSignUpRequest(request: Request, runtime: AuthRuntime
         }),
       }
     )
+  } catch (error) {
+    return errorResponse(error)
+  }
+}
+
+export async function handleEmailStatusRequest(
+  request: Request,
+  runtime: AuthRuntime = authRuntime
+) {
+  try {
+    const payload = await parseJsonRequest(request, emailStatusSchema)
+    const result = await runtime.accounts.checkEmailExists(payload)
+
+    return jsonResponse(result)
   } catch (error) {
     return errorResponse(error)
   }

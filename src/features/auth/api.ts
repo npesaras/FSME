@@ -14,6 +14,10 @@ type SignUpPayload = {
   password: string
 }
 
+type EmailStatusPayload = {
+  email: string
+}
+
 type ForgotPasswordPayload = {
   email: string
   origin: string
@@ -28,6 +32,10 @@ type ResetPasswordPayload = {
 type ApiErrorPayload = {
   message?: string
   code?: string
+}
+
+export type AuthEmailStatus = {
+  exists: boolean
 }
 
 export class AuthApiError extends Error {
@@ -123,6 +131,12 @@ export function signIn(payload: SignInPayload) {
 
 export function signUp(payload: SignUpPayload) {
   return sendAuthRequest<AuthSession>('/api/v1/auth/sign-up', {
+    payload,
+  })
+}
+
+export function checkEmailStatus(payload: EmailStatusPayload) {
+  return sendAuthRequest<AuthEmailStatus>('/api/v1/auth/email-status', {
     payload,
   })
 }

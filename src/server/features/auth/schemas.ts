@@ -19,6 +19,12 @@ export const signInSchema = z
   })
   .strict()
 
+export const emailStatusSchema = z
+  .object({
+    email: z.email(),
+  })
+  .strict()
+
 export const forgotPasswordSchema = z
   .object({
     email: z.email(),
@@ -36,5 +42,6 @@ export const resetPasswordSchema = z
 
 export type SignUpInput = z.infer<typeof signUpSchema>
 export type SignInInput = z.infer<typeof signInSchema>
+export type EmailStatusInput = z.infer<typeof emailStatusSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

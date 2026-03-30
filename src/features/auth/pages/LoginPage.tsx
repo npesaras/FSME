@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Eye, EyeOff, Mail } from 'lucide-react'
@@ -19,15 +19,23 @@ import {
   authSupportLinkClassName,
   authTrailingIconClassName,
 } from '../components/authClassNames'
-import { AuthApiError, signIn } from '../api'
+import { signIn } from '../api'
+import {
+  getAuthPageErrorMessage,
+  normalizeEmailInput,
+  useGuardedFormSubmit,
+  validateEmailInput,
+  validateRequiredPassword,
+} from '../form-utils'
 import { getDefaultAuthenticatedPath } from '../session'
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const clearSubmitError = useCallback(() => {
+    setSubmitError((current) => (current ? null : current))
+  }, [])
   const form = useForm({
     defaultValues: {
       email: '',
@@ -36,26 +44,23 @@ export default function LoginPage() {
     },
     onSubmit: async ({ value }) => {
       try {
-        setSubmitError(null)
+        clearSubmitError()
 
         const { account } = await signIn({
-          email: value.email,
+          email: normalizeEmailInput(value.email),
           password: value.password,
           remember: value.remember,
         })
-        navigate({
+        await navigate({
           to: getDefaultAuthenticatedPath(account),
           replace: true,
         })
       } catch (error) {
-        setSubmitError(
-          error instanceof AuthApiError
-            ? error.message
-            : 'Unable to sign in right now. Please try again.'
-        )
+        setSubmitError(getAuthPageErrorMessage(error, 'Unable to sign in right now. Please try again.'))
       }
     },
   })
+  const handleFormSubmit = useGuardedFormSubmit(() => form.handleSubmit())
 
   return (
     <AuthSplitLayout
@@ -99,11 +104,7 @@ export default function LoginPage() {
 
       <form
         noValidate
-        onSubmit={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          void form.handleSubmit()
-        }}
+        onSubmit={handleFormSubmit}
         className="space-y-5"
       >
         {submitError ? (
@@ -115,17 +116,7 @@ export default function LoginPage() {
         <form.Field
           name="email"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'Email is required'
-              }
-
-              if (!emailPattern.test(value)) {
-                return 'Enter a valid email address'
-              }
-
-              return undefined
-            },
+            onChange: ({ value }) => validateEmailInput(value),
           }}
         >
           {(field) => {
@@ -142,9 +133,14 @@ export default function LoginPage() {
                     name={field.name}
                     type="email"
                     autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.value)
+                    }}
                     className={authInputClassName}
                     placeholder="Enter your email"
                   />
@@ -163,13 +159,7 @@ export default function LoginPage() {
         <form.Field
           name="password"
           validators={{
-            onChange: ({ value }) => {
-              if (!value) {
-                return 'Password is required'
-              }
-
-              return undefined
-            },
+            onChange: ({ value }) => validateRequiredPassword(value),
           }}
         >
           {(field) => {
@@ -188,7 +178,10 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      clearSubmitError()
+                      field.handleChange(event.target.value)
+                    }}
                     className={authInputClassName}
                     placeholder="Enter your password"
                   />
@@ -222,7 +215,10 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={field.state.value}
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.checked)}
+                  onChange={(event) => {
+                    clearSubmitError()
+                    field.handleChange(event.target.checked)
+                  }}
                   className={authCheckboxClassName}
                 />
                 <label

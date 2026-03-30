@@ -31,6 +31,7 @@ import { Route as ApiV1AuthSignInRouteImport } from './routes/api/v1/auth/sign-i
 import { Route as ApiV1AuthResetPasswordRouteImport } from './routes/api/v1/auth/reset-password'
 import { Route as ApiV1AuthMeRouteImport } from './routes/api/v1/auth/me'
 import { Route as ApiV1AuthForgotPasswordRouteImport } from './routes/api/v1/auth/forgot-password'
+import { Route as ApiV1AuthEmailStatusRouteImport } from './routes/api/v1/auth/email-status'
 import { Route as ApiV1AppwriteTablesRouteImport } from './routes/api/v1/appwrite/tables'
 import { Route as ApiV1AppwriteHealthRouteImport } from './routes/api/v1/appwrite/health'
 
@@ -144,6 +145,11 @@ const ApiV1AuthForgotPasswordRoute = ApiV1AuthForgotPasswordRouteImport.update({
   path: '/api/v1/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1AuthEmailStatusRoute = ApiV1AuthEmailStatusRouteImport.update({
+  id: '/api/v1/auth/email-status',
+  path: '/api/v1/auth/email-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1AppwriteTablesRoute = ApiV1AppwriteTablesRouteImport.update({
   id: '/api/v1/appwrite/tables',
   path: '/api/v1/appwrite/tables',
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
+  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
+  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/api/v1/health': typeof ApiV1HealthRoute
   '/api/v1/appwrite/health': typeof ApiV1AppwriteHealthRoute
   '/api/v1/appwrite/tables': typeof ApiV1AppwriteTablesRoute
+  '/api/v1/auth/email-status': typeof ApiV1AuthEmailStatusRoute
   '/api/v1/auth/forgot-password': typeof ApiV1AuthForgotPasswordRoute
   '/api/v1/auth/me': typeof ApiV1AuthMeRoute
   '/api/v1/auth/reset-password': typeof ApiV1AuthResetPasswordRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
+    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
+    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/api/v1/health'
     | '/api/v1/appwrite/health'
     | '/api/v1/appwrite/tables'
+    | '/api/v1/auth/email-status'
     | '/api/v1/auth/forgot-password'
     | '/api/v1/auth/me'
     | '/api/v1/auth/reset-password'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   ApiV1HealthRoute: typeof ApiV1HealthRoute
   ApiV1AppwriteHealthRoute: typeof ApiV1AppwriteHealthRoute
   ApiV1AppwriteTablesRoute: typeof ApiV1AppwriteTablesRoute
+  ApiV1AuthEmailStatusRoute: typeof ApiV1AuthEmailStatusRoute
   ApiV1AuthForgotPasswordRoute: typeof ApiV1AuthForgotPasswordRoute
   ApiV1AuthMeRoute: typeof ApiV1AuthMeRoute
   ApiV1AuthResetPasswordRoute: typeof ApiV1AuthResetPasswordRoute
@@ -498,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/auth/email-status': {
+      id: '/api/v1/auth/email-status'
+      path: '/api/v1/auth/email-status'
+      fullPath: '/api/v1/auth/email-status'
+      preLoaderRoute: typeof ApiV1AuthEmailStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/appwrite/tables': {
       id: '/api/v1/appwrite/tables'
       path: '/api/v1/appwrite/tables'
@@ -534,6 +554,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1HealthRoute: ApiV1HealthRoute,
   ApiV1AppwriteHealthRoute: ApiV1AppwriteHealthRoute,
   ApiV1AppwriteTablesRoute: ApiV1AppwriteTablesRoute,
+  ApiV1AuthEmailStatusRoute: ApiV1AuthEmailStatusRoute,
   ApiV1AuthForgotPasswordRoute: ApiV1AuthForgotPasswordRoute,
   ApiV1AuthMeRoute: ApiV1AuthMeRoute,
   ApiV1AuthResetPasswordRoute: ApiV1AuthResetPasswordRoute,

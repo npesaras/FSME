@@ -28,6 +28,7 @@ import { Route as publicResetPasswordRouteImport } from './routes/(public)/reset
 import { Route as publicHomeRouteImport } from './routes/(public)/home'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
 import { Route as ApiV1HealthRouteImport } from './routes/api/v1/health'
+import { Route as ApiV1ChatSyncRouteImport } from './routes/api/v1/chat/sync'
 import { Route as ApiV1AuthVerifyEmailRouteImport } from './routes/api/v1/auth/verify-email'
 import { Route as ApiV1AuthSignUpRouteImport } from './routes/api/v1/auth/sign-up'
 import { Route as ApiV1AuthSignOutRouteImport } from './routes/api/v1/auth/sign-out'
@@ -134,6 +135,11 @@ const ApiV1HealthRoute = ApiV1HealthRouteImport.update({
   path: '/api/v1/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1ChatSyncRoute = ApiV1ChatSyncRouteImport.update({
+  id: '/api/v1/chat/sync',
+  path: '/api/v1/chat/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1AuthVerifyEmailRoute = ApiV1AuthVerifyEmailRouteImport.update({
   id: '/api/v1/auth/verify-email',
   path: '/api/v1/auth/verify-email',
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
   '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
+  '/api/v1/chat/sync': typeof ApiV1ChatSyncRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof publicForgotPasswordRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
   '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
+  '/api/v1/chat/sync': typeof ApiV1ChatSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   '/api/v1/auth/sign-out': typeof ApiV1AuthSignOutRoute
   '/api/v1/auth/sign-up': typeof ApiV1AuthSignUpRoute
   '/api/v1/auth/verify-email': typeof ApiV1AuthVerifyEmailRoute
+  '/api/v1/chat/sync': typeof ApiV1ChatSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
     | '/api/v1/auth/verify-email'
+    | '/api/v1/chat/sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
     | '/api/v1/auth/verify-email'
+    | '/api/v1/chat/sync'
   id:
     | '__root__'
     | '/faculty'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/api/v1/auth/sign-out'
     | '/api/v1/auth/sign-up'
     | '/api/v1/auth/verify-email'
+    | '/api/v1/chat/sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -393,6 +405,7 @@ export interface RootRouteChildren {
   ApiV1AuthSignOutRoute: typeof ApiV1AuthSignOutRoute
   ApiV1AuthSignUpRoute: typeof ApiV1AuthSignUpRoute
   ApiV1AuthVerifyEmailRoute: typeof ApiV1AuthVerifyEmailRoute
+  ApiV1ChatSyncRoute: typeof ApiV1ChatSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -530,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/chat/sync': {
+      id: '/api/v1/chat/sync'
+      path: '/api/v1/chat/sync'
+      fullPath: '/api/v1/chat/sync'
+      preLoaderRoute: typeof ApiV1ChatSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/auth/verify-email': {
       id: '/api/v1/auth/verify-email'
       path: '/api/v1/auth/verify-email'
@@ -661,6 +681,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiV1AuthSignOutRoute: ApiV1AuthSignOutRoute,
   ApiV1AuthSignUpRoute: ApiV1AuthSignUpRoute,
   ApiV1AuthVerifyEmailRoute: ApiV1AuthVerifyEmailRoute,
+  ApiV1ChatSyncRoute: ApiV1ChatSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

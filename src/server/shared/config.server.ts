@@ -73,5 +73,6 @@ export const config = {
     appId: readEnv(['COMETCHAT_APP_ID', 'VITE_COMETCHAT_APP_ID'], '')!,
     region: readEnv(['COMETCHAT_REGION', 'VITE_COMETCHAT_REGION'], '')!,
     apiKey: readEnv(['COMETCHAT_API_KEY'], '')!,
+    syncToken: readEnv(['COMETCHAT_SYNC_TOKEN'], '')!,
   },
 } as const

@@ -3,7 +3,7 @@ import type { AuthRole } from '#/features/auth/types'
 import { AppError } from '../../shared/errors.server'
 import type { ServerLogger } from '../../types/logger'
 
-interface UserProfileRow extends Models.Row {
+export interface UserProfileRow extends Models.Row {
   user_id: string
   full_name: string
   role: AuthRole
@@ -85,6 +85,37 @@ export function createUserProfilesRepository({
   return {
     async findByUserId(userId: string) {
       return findByUserId(userId)
+    },
+
+    async listProfiles({ limit = 100 }: { limit?: number } = {}) {
+      const rows: UserProfileRow[] = []
+      let offset = 0
+
+      while (true) {
+        try {
+          const result = await tablesDB.listRows<UserProfileRow>({
+            databaseId,
+            tableId,
+            queries: [Query.orderAsc('user_id'), Query.limit(limit), Query.offset(offset)],
+            total: false,
+          })
+
+          rows.push(...result.rows)
+
+          if (result.rows.length < limit) {
+            return rows
+          }
+
+          offset += result.rows.length
+        } catch (error) {
+          if (isMissingTableError(error)) {
+            logger?.warn?.({ tableId }, 'User profiles table was not found while listing auth profile data.')
+            throw createTableMissingError()
+          }
+
+          throw error
+        }
+      }
     },
 
     async upsertVerifiedProfile({

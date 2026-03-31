@@ -420,4 +420,115 @@ describe('CometChat provisioning service', () => {
       }),
     )
   })
+
+  it('backfills remote users from authoritative Appwrite user profiles', async () => {
+    const tablesDB = createTablesDb()
+    const fetchMock = vi.fn()
+
+    tablesDB.listRows.mockImplementation(async ({ tableId, queries }) => {
+      const queryText = Array.isArray(queries) ? queries.join(' ') : ''
+
+      if (tableId === 'user_profiles') {
+        return {
+          rows: [
+            {
+              $id: 'profile-1',
+              user_id: 'user-1',
+              full_name: 'Faculty User',
+              role: 'faculty',
+            },
+          ],
+          total: 1,
+        }
+      }
+
+      if (tableId === 'comet_user_profiles' && queryText.includes('equal("user_id",["user-1"])')) {
+        return {
+          rows: [],
+          total: 0,
+        }
+      }
+
+      if (tableId === 'comet_user_profiles') {
+        return {
+          rows: [],
+          total: 0,
+        }
+      }
+
+      return { rows: [], total: 0 }
+    })
+    tablesDB.createRow.mockResolvedValue({
+      $id: 'row-1',
+      user_id: 'user-1',
+      cometchat_uid: 'fsme-user-1',
+      full_name: 'Faculty User',
+      role: 'faculty',
+      avatar_url: null,
+      profile_link: null,
+      auth_token: 'token-123',
+    })
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            error: {
+              code: 'ERR_UID_NOT_FOUND',
+              message: 'User not found.',
+            },
+          },
+          404,
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          data: {
+            uid: 'fsme-user-1',
+            authToken: 'token-123',
+          },
+        }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createCometChatProvisioningService({
+      appId: 'app-id',
+      region: 'us',
+      apiKey: 'server-api-key',
+      tablesDB,
+      databaseId: 'main',
+      userProfilesTableId: 'user_profiles',
+      cometUserProfilesTableId: 'comet_user_profiles',
+      logger: console,
+    })
+
+    const result = await service.syncAuthoritativeProfiles()
+
+    expect(result).toEqual({
+      totalAuthoritativeProfiles: 1,
+      totalLocalProfiles: 1,
+      totalManagedRemoteUsers: 0,
+      created: 1,
+      updated: 0,
+      deleted: 0,
+      createdUids: ['fsme-user-1'],
+      updatedUids: [],
+      deletedUids: [],
+      deletedLocalMirrorRows: 0,
+      deletedLocalMirrorUserIds: [],
+    })
+    expect(tablesDB.createRow).toHaveBeenCalledWith({
+      databaseId: 'main',
+      tableId: 'comet_user_profiles',
+      rowId: expect.any(String),
+      data: {
+        user_id: 'user-1',
+        cometchat_uid: 'fsme-user-1',
+        full_name: 'Faculty User',
+        role: 'faculty',
+        avatar_url: null,
+        profile_link: null,
+        auth_token: 'token-123',
+      },
+    })
+  })
 })

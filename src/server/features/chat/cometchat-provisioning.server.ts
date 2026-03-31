@@ -6,6 +6,7 @@ import {
   createCometUserProfilesRepository,
   type CometUserProfileRow,
 } from './comet-user-profiles.server'
+import { createUserProfilesRepository } from '../auth/user-profiles.server'
 
 type TablesDbLike = {
   listRows: <Row extends Models.Row = Models.DefaultRow>(options: {
@@ -56,6 +57,20 @@ export type SyncStoredCometChatProfilesResult = {
   deletedUids: string[]
 }
 
+export type BackfillCometChatProfilesResult = {
+  totalAuthoritativeProfiles: number
+  totalLocalProfiles: number
+  createdLocalProfiles: number
+  updatedLocalProfiles: number
+  deletedLocalProfiles: number
+  createdLocalUserIds: string[]
+  updatedLocalUserIds: string[]
+  deletedLocalUserIds: string[]
+}
+
+export type SyncAuthoritativeCometChatProfilesResult = SyncStoredCometChatProfilesResult &
+  BackfillCometChatProfilesResult
+
 type EnsureCometChatProfileInput = {
   userId: string
   fullName: string
@@ -70,6 +85,7 @@ type CreateCometChatProvisioningServiceOptions = {
   apiKey: string
   tablesDB: TablesDbLike
   databaseId: string
+  userProfilesTableId?: string
   cometUserProfilesTableId: string
   logger?: ServerLogger
 }
@@ -251,6 +267,22 @@ function buildResolvedProfileFromRow(profile: CometUserProfileRow): ResolvedCome
   }
 }
 
+function profileMatchesRow(profile: ResolvedCometChatProfile, row: CometUserProfileRow | null) {
+  if (!row) {
+    return false
+  }
+
+  return (
+    row.user_id === profile.userId &&
+    row.cometchat_uid === profile.uid &&
+    normalizeName(row.full_name) === profile.fullName &&
+    row.role === profile.role &&
+    normalizeOptionalUrl(row.avatar_url) === profile.avatarUrl &&
+    normalizeOptionalUrl(row.profile_link) === profile.profileLink &&
+    readString(row.auth_token) === profile.authToken
+  )
+}
+
 function toProvisioningError(error: unknown, fallbackCode: string, fallbackMessage: string) {
   if (error instanceof AppError) {
     return error
@@ -308,6 +340,7 @@ export function createCometChatProvisioningService({
   apiKey,
   tablesDB,
   databaseId,
+  userProfilesTableId,
   cometUserProfilesTableId,
   logger,
 }: CreateCometChatProvisioningServiceOptions) {
@@ -317,6 +350,14 @@ export function createCometChatProvisioningService({
     tableId: cometUserProfilesTableId,
     logger,
   })
+  const authoritativeProfilesRepository = userProfilesTableId
+    ? createUserProfilesRepository({
+        tablesDB,
+        databaseId,
+        tableId: userProfilesTableId,
+        logger,
+      })
+    : null
   const isConfigured = Boolean(appId && region && apiKey)
   const apiBaseUrl = isConfigured ? `https://${appId}.api-${region}.cometchat.io/v3.0` : ''
 
@@ -344,7 +385,22 @@ export function createCometChatProvisioningService({
     }
   }
 
-  async function persistProfile(profile: ResolvedCometChatProfile) {
+  async function listStoredProfiles() {
+    try {
+      return await profilesRepository.listProfiles()
+    } catch (error) {
+      if (isCometUserProfilesTableMissingError(error)) {
+        return []
+      }
+
+      throw error
+    }
+  }
+
+  async function persistProfile(
+    profile: ResolvedCometChatProfile,
+    { allowMissingTable = true }: { allowMissingTable?: boolean } = {},
+  ) {
     try {
       return await profilesRepository.upsertProfile({
         userId: profile.userId,
@@ -357,6 +413,10 @@ export function createCometChatProvisioningService({
       })
     } catch (error) {
       if (isCometUserProfilesTableMissingError(error)) {
+        if (!allowMissingTable) {
+          throw error
+        }
+
         logger?.warn?.(
           { tableId: cometUserProfilesTableId, uid: profile.uid, userId: profile.userId },
           'Skipping CometChat profile mirror persistence because the Appwrite table is not provisioned yet.',
@@ -368,11 +428,18 @@ export function createCometChatProvisioningService({
     }
   }
 
-  async function deleteStoredProfile(userId: string) {
+  async function deleteStoredProfile(
+    userId: string,
+    { allowMissingTable = true }: { allowMissingTable?: boolean } = {},
+  ) {
     try {
       return await profilesRepository.deleteByUserId(userId)
     } catch (error) {
       if (isCometUserProfilesTableMissingError(error)) {
+        if (!allowMissingTable) {
+          throw error
+        }
+
         return false
       }
 
@@ -613,9 +680,105 @@ export function createCometChatProvisioningService({
       authToken: readString(storedProfile?.auth_token),
     }
 
+    await persistProfile(resolvedProfile)
     await syncRemoteProfile(resolvedProfile, { ensureAuthToken: true })
 
     return resolvedProfile
+  }
+
+  async function listAuthoritativeProfiles() {
+    if (!authoritativeProfilesRepository) {
+      throw new AppError(
+        500,
+        'CometChat sync could not locate the Appwrite user profiles table.',
+        {
+          code: 'USER_PROFILES_SYNC_NOT_CONFIGURED',
+        },
+      )
+    }
+
+    return authoritativeProfilesRepository.listProfiles()
+  }
+
+  async function backfillProfilesFromUserProfiles({
+    deleteMissingLocalProfiles = false,
+  }: {
+    deleteMissingLocalProfiles?: boolean
+  } = {}): Promise<BackfillCometChatProfilesResult> {
+    const authoritativeProfiles = await listAuthoritativeProfiles()
+    const mirroredProfiles = await listStoredProfiles()
+    const mirroredProfilesByUserId = new Map(
+      mirroredProfiles.map((profile) => [profile.user_id, profile] as const),
+    )
+    const authoritativeUserIds = new Set(authoritativeProfiles.map((profile) => profile.user_id))
+    const finalLocalProfileCount = deleteMissingLocalProfiles
+      ? authoritativeProfiles.length
+      : new Set([
+          ...authoritativeProfiles.map((profile) => profile.user_id),
+          ...mirroredProfiles.map((profile) => profile.user_id),
+        ]).size
+
+    const result: BackfillCometChatProfilesResult = {
+      totalAuthoritativeProfiles: authoritativeProfiles.length,
+      totalLocalProfiles: finalLocalProfileCount,
+      createdLocalProfiles: 0,
+      updatedLocalProfiles: 0,
+      deletedLocalProfiles: 0,
+      createdLocalUserIds: [],
+      updatedLocalUserIds: [],
+      deletedLocalUserIds: [],
+    }
+
+    for (const profileRow of authoritativeProfiles) {
+      const storedProfile = mirroredProfilesByUserId.get(profileRow.user_id) ?? null
+      const resolvedProfile: ResolvedCometChatProfile = {
+        userId: profileRow.user_id,
+        uid: storedProfile?.cometchat_uid || createStableCometChatUid(profileRow.user_id),
+        fullName: normalizeName(profileRow.full_name),
+        role: profileRow.role,
+        avatarUrl: normalizeOptionalUrl(storedProfile?.avatar_url),
+        profileLink: normalizeOptionalUrl(storedProfile?.profile_link),
+        authToken: readString(storedProfile?.auth_token),
+      }
+
+      if (profileMatchesRow(resolvedProfile, storedProfile)) {
+        continue
+      }
+
+      await persistProfile(resolvedProfile, { allowMissingTable: false })
+
+      if (!storedProfile) {
+        result.createdLocalProfiles += 1
+        result.createdLocalUserIds.push(profileRow.user_id)
+        continue
+      }
+
+      result.updatedLocalProfiles += 1
+      result.updatedLocalUserIds.push(profileRow.user_id)
+    }
+
+    if (!deleteMissingLocalProfiles) {
+      return result
+    }
+
+    for (const mirroredProfile of mirroredProfiles) {
+      if (authoritativeUserIds.has(mirroredProfile.user_id)) {
+        continue
+      }
+
+      const deleted = await deleteStoredProfile(mirroredProfile.user_id, {
+        allowMissingTable: false,
+      })
+
+      if (!deleted) {
+        continue
+      }
+
+      result.deletedLocalProfiles += 1
+      result.deletedLocalUserIds.push(mirroredProfile.user_id)
+    }
+
+    return result
   }
 
   return {
@@ -634,13 +797,13 @@ export function createCometChatProvisioningService({
     async deleteProfileForUser(userId: string) {
       const storedProfile = await findStoredProfile(userId)
       const uid = storedProfile?.cometchat_uid || createStableCometChatUid(userId)
-      const storedDeleted = await deleteStoredProfile(userId)
 
       if (!isConfigured) {
-        return storedDeleted
+        return deleteStoredProfile(userId)
       }
 
       const remoteDeleted = await deleteRemoteUser(uid, { permanent: false })
+      const storedDeleted = await deleteStoredProfile(userId)
 
       return storedDeleted || remoteDeleted
     },
@@ -656,7 +819,7 @@ export function createCometChatProvisioningService({
     } = {}): Promise<SyncStoredCometChatProfilesResult> {
       assertConfigured()
 
-      const storedProfiles = await profilesRepository.listProfiles()
+      const storedProfiles = await listStoredProfiles()
       const desiredProfiles = storedProfiles.map(buildResolvedProfileFromRow)
       const desiredUids = new Set(desiredProfiles.map((profile) => profile.uid))
       const result: SyncStoredCometChatProfilesResult = {
@@ -706,6 +869,29 @@ export function createCometChatProvisioningService({
       }
 
       return result
+    },
+
+    async backfillProfilesFromUserProfiles(options = {}) {
+      return backfillProfilesFromUserProfiles(options)
+    },
+
+    async syncAuthoritativeProfiles({
+      deleteRemoteUsers = false,
+    }: {
+      deleteRemoteUsers?: boolean
+    } = {}): Promise<SyncAuthoritativeCometChatProfilesResult> {
+      assertConfigured()
+      const backfillResult = await backfillProfilesFromUserProfiles({
+        deleteMissingLocalProfiles: deleteRemoteUsers,
+      })
+      const syncResult = await this.syncStoredProfiles({
+        deleteRemoteUsers,
+      })
+
+      return {
+        ...backfillResult,
+        ...syncResult,
+      }
     },
   }
 }

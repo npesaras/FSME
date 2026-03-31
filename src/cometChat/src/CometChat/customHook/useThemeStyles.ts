@@ -79,6 +79,17 @@ function rgbToHex(red: number, green: number, blue: number) {
     .join('')}`;
 }
 
+function withAlpha(color: string, alpha: number, fallback: string) {
+  const resolvedColor = resolveCssColor(color, fallback);
+  const rgbValues = parseRgbValues(resolvedColor);
+
+  if (!rgbValues) {
+    return fallback;
+  }
+
+  return `rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, ${alpha})`;
+}
+
 function resolveCssColor(color: string, fallback: string) {
   const directHex = normalizeHex(color);
 
@@ -205,13 +216,15 @@ function useThemeStyles(
           getAppToken('--border', currentTheme === 'dark' ? DEFAULT_DARK_BORDER : DEFAULT_LIGHT_BORDER),
           currentTheme === 'dark' ? DEFAULT_DARK_BORDER : DEFAULT_LIGHT_BORDER
         );
-        const borderLight = hexToRGBA(
-          resolveColorToHex(borderDefault, currentTheme === 'dark' ? '#454545' : '#d8d8d8'),
-          currentTheme === 'dark' ? 0.75 : 0.68
+        const borderLight = withAlpha(
+          borderDefault,
+          currentTheme === 'dark' ? 0.56 : 0.08,
+          currentTheme === 'dark' ? 'rgba(69, 69, 69, 0.56)' : 'rgba(15, 23, 42, 0.08)'
         );
-        const borderDark = hexToRGBA(
-          resolveColorToHex(borderDefault, currentTheme === 'dark' ? '#6a6a6a' : '#b7b7b7'),
-          currentTheme === 'dark' ? 0.92 : 0.92
+        const borderDark = withAlpha(
+          borderDefault,
+          currentTheme === 'dark' ? 0.72 : 0.14,
+          currentTheme === 'dark' ? 'rgba(106, 106, 106, 0.72)' : 'rgba(15, 23, 42, 0.14)'
         );
         const themedProperties = {
           '--cometchat-primary-color': brandColor,

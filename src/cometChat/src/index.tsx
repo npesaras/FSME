@@ -1,29 +1,35 @@
-import ReactDOM from "react-dom/client";
+import ReactDOM from 'react-dom/client';
 import {
   CometChatUIKit,
   UIKitSettingsBuilder,
-} from "@cometchat/chat-uikit-react";
-import React from "react";
-import App from "App";
-import { setupLocalization } from "CometChat/utils/utils";
-import cometChatLogo from "../src/CometChat/assets/cometchat_logo.svg";
-import { CometChatProvider } from "CometChat/context/CometChatContext";
-/**
- * CometChat application constants
- * @constant {Object} COMETCHAT_CONSTANTS
- * @property {string} APP_ID - CometChat application ID
- * @property {string} REGION - CometChat region
- * @property {string} AUTH_KEY - CometChat authentication key
- */
+} from '@cometchat/chat-uikit-react';
+import React from 'react';
+import App from 'App';
+import { setupLocalization } from 'CometChat/utils/utils';
+import cometChatLogo from '../src/CometChat/assets/cometchat_logo.svg';
+import { CometChatProvider } from 'CometChat/context/CometChatContext';
+
+function readEnv(value: string | undefined) {
+  const normalizedValue = value?.trim() ?? ''
+
+  if (
+    !normalizedValue ||
+    normalizedValue.startsWith('YOUR_') ||
+    normalizedValue.startsWith('REPLACE_') ||
+    normalizedValue === 'UID'
+  ) {
+    return ''
+  }
+
+  return normalizedValue
+}
+
 export const COMETCHAT_CONSTANTS = {
-  APP_ID: "1676971e9577630c1",
-  REGION: "us",
-  AUTH_KEY: "3e505052063e2ab0876a3ddcd97800fe1a2ece59",
+  APP_ID: readEnv(import.meta.env.VITE_COMETCHAT_APP_ID),
+  REGION: readEnv(import.meta.env.VITE_COMETCHAT_REGION),
+  AUTH_KEY: readEnv(import.meta.env.VITE_COMETCHAT_AUTH_KEY),
 };
 
-/**
- * Initialize CometChat if credentials are available, otherwise render the app directly.
- */
 if (
   COMETCHAT_CONSTANTS.APP_ID &&
   COMETCHAT_CONSTANTS.REGION &&
@@ -36,13 +42,10 @@ if (
     .subscribePresenceForAllUsers()
     .build();
 
-  /**
-   * Initialize CometChat UIKit and render the application inside the CometChatProvider.
-   */
-  CometChatUIKit.init(uiKitSettings)?.then((response) => {
+  CometChatUIKit.init(uiKitSettings)?.then(() => {
     setupLocalization();
     const root = ReactDOM.createRoot(
-      document.getElementById("root") as HTMLElement
+      document.getElementById('root') as HTMLElement
     );
     root.render(
       <CometChatProvider>
@@ -51,20 +54,16 @@ if (
     );
   });
 } else {
-  /**
-   * If credentials are missing, render the app without initializing CometChat.
-   */
   const root = ReactDOM.createRoot(
-    document.getElementById("root") as HTMLElement
+    document.getElementById('root') as HTMLElement
   );
   root.render(
-    <div className="App" style={{ gap: "20px" }}>
+    <div className="App" style={{ gap: '20px' }}>
       <div className="cometchat-credentials__logo">
         <img src={cometChatLogo} alt="CometChat Logo" />
       </div>
       <div className="cometchat-credentials__header">
-        CometChat App credentials are missing. Please add them in{" "}
-        <code>index.tsx</code> to continue.
+        CometChat App credentials are missing. Please add them in <code>.env</code> to continue.
       </div>
     </div>
   );

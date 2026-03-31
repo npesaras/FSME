@@ -238,6 +238,69 @@ width: 212px;
     font: var(--cometchat-font-heading1-bold, 700 24px Roboto);
 }
 
+.cometchat-users-empty-state {
+    display: flex;
+    height: 100%;
+    min-height: 320px;
+    padding: 24px 20px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--cometchat-text-color-primary, #141414);
+    background:
+        linear-gradient(180deg, color-mix(in oklab, var(--cometchat-background-color-01, #FFF) 96%, var(--cometchat-primary-color, #1e847c) 4%) 0%, var(--cometchat-background-color-01, #FFF) 100%);
+}
+
+.cometchat-users-empty-state__eyebrow {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--cometchat-primary-color, #1e847c) 12%, transparent);
+    color: var(--cometchat-text-color-highlight, #1e847c);
+    font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cometchat-users-empty-state__title {
+    font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+}
+
+.cometchat-users-empty-state__description {
+    margin: 0;
+    color: var(--cometchat-text-color-secondary, #727272);
+    font: var(--cometchat-font-body-regular, 400 14px Roboto);
+    line-height: 1.6;
+}
+
+.cometchat-users-empty-state__identity {
+    display: flex;
+    width: 100%;
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid var(--cometchat-border-color-light, #F5F5F5);
+    border-radius: var(--cometchat-radius-3, 12px);
+    background: color-mix(in oklab, var(--cometchat-background-color-02, #FAFAFA) 92%, transparent);
+}
+
+.cometchat-users-empty-state__identity-label {
+    color: var(--cometchat-text-color-secondary, #727272);
+    font: var(--cometchat-font-caption1-medium, 500 12px Roboto);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.cometchat-users-empty-state__identity-name {
+    font: var(--cometchat-font-heading4-medium, 500 16px Roboto);
+}
+
+.cometchat-users-empty-state__identity-uid {
+    overflow-wrap: anywhere;
+    color: var(--cometchat-text-color-secondary, #727272);
+    font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+}
+
 .cometchat-groups-header .cometchat-button .cometchat-button__icon {
     background: var(--cometchat-icon-color-primary, #141414);
 }

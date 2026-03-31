@@ -8,6 +8,7 @@ import { CometChat } from '@cometchat/chat-sdk-javascript';
 import '../../styles/CometChatSelector/CometChatSelector.css';
 import { CometChatJoinGroup } from '../CometChatJoinGroup/CometChatJoinGroup';
 import CometChatCreateGroup from '../CometChatCreateGroup/CometChatCreateGroup';
+import { CometChatUsersEmptyView } from './CometChatUsersEmptyView';
 import {
   CometChatButton,
   CometChatCallLogs,
@@ -296,6 +297,7 @@ const CometChatSelector = (props: SelectorProps) => {
                 onSelectorItemClicked(e, 'updateSelectedItemUser');
               }}
               usersRequestBuilder={usersRequestBuilder}
+              emptyView={<CometChatUsersEmptyView loggedInUser={loggedInUser} />}
               hideUserStatus={
                 (chatFeatures && !chatFeatures?.coreMessagingExperience?.userAndFriendsPresence) ??
                 !CometChatSettings.chatFeatures.coreMessagingExperience.userAndFriendsPresence

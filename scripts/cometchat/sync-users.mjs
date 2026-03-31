@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { Client, Query, TablesDB } from 'node-appwrite'
+import { Client, ID, Query, TablesDB } from 'node-appwrite'
 import dotenv from 'dotenv'
 
 function loadEnv() {
@@ -51,6 +51,17 @@ function normalizeOptionalUrl(value) {
   const normalizedValue = typeof value === 'string' ? value.trim() : ''
 
   return normalizedValue || null
+}
+
+function createStableCometChatUid(userId) {
+  const normalizedUserId = String(userId)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  return `fsme-${normalizedUserId || 'user'}`
 }
 
 function readString(value) {
@@ -122,6 +133,22 @@ function isManagedRemoteUser(user) {
   )
 }
 
+function isEquivalentLocalProfile(profile, row) {
+  if (!row) {
+    return false
+  }
+
+  return (
+    row.user_id === profile.userId &&
+    row.cometchat_uid === profile.uid &&
+    normalizeName(row.full_name) === profile.fullName &&
+    row.role === profile.role &&
+    normalizeOptionalUrl(row.avatar_url) === profile.avatarUrl &&
+    normalizeOptionalUrl(row.profile_link) === profile.profileLink &&
+    readString(row.auth_token) === profile.authToken
+  )
+}
+
 async function parseResponseBody(response) {
   const text = await response.text()
 
@@ -143,6 +170,10 @@ async function main() {
   const appwriteProjectId = requireEnv(['APPWRITE_PROJECT_ID'])
   const appwriteApiKey = requireEnv(['APPWRITE_API_KEY'])
   const appwriteDatabaseId = requireEnv(['APPWRITE_DATABASE_ID'])
+  const userProfilesTableId = readEnv(
+    ['APPWRITE_USER_PROFILES_TABLE_ID', 'VITE_APPWRITE_USER_PROFILES_TABLE_ID'],
+    'user_profiles',
+  )
   const cometUserProfilesTableId = readEnv(
     ['APPWRITE_COMET_USER_PROFILES_TABLE_ID', 'VITE_APPWRITE_COMET_USER_PROFILES_TABLE_ID'],
     'comet_user_profiles',
@@ -159,7 +190,7 @@ async function main() {
     .setKey(appwriteApiKey)
   const tablesDB = new TablesDB(client)
 
-  async function listLocalProfiles() {
+  async function listRows(tableId) {
     const rows = []
     let offset = 0
     const limit = 100
@@ -167,7 +198,7 @@ async function main() {
     while (true) {
       const result = await tablesDB.listRows({
         databaseId: appwriteDatabaseId,
-        tableId: cometUserProfilesTableId,
+        tableId,
         queries: [Query.orderAsc('user_id'), Query.limit(limit), Query.offset(offset)],
         total: false,
       })
@@ -182,14 +213,44 @@ async function main() {
     }
   }
 
-  async function updateLocalProfileAuthToken(rowId, authToken) {
-    await tablesDB.updateRow({
+  async function createLocalProfile(profile) {
+    return tablesDB.createRow({
+      databaseId: appwriteDatabaseId,
+      tableId: cometUserProfilesTableId,
+      rowId: ID.unique(),
+      data: {
+        user_id: profile.userId,
+        cometchat_uid: profile.uid,
+        full_name: profile.fullName,
+        role: profile.role,
+        avatar_url: profile.avatarUrl ?? null,
+        profile_link: profile.profileLink ?? null,
+        auth_token: profile.authToken ?? null,
+      },
+    })
+  }
+
+  async function updateLocalProfile(rowId, profile) {
+    return tablesDB.updateRow({
       databaseId: appwriteDatabaseId,
       tableId: cometUserProfilesTableId,
       rowId,
       data: {
-        auth_token: authToken ?? null,
+        cometchat_uid: profile.uid,
+        full_name: profile.fullName,
+        role: profile.role,
+        avatar_url: profile.avatarUrl ?? null,
+        profile_link: profile.profileLink ?? null,
+        auth_token: profile.authToken ?? null,
       },
+    })
+  }
+
+  async function deleteLocalProfile(rowId) {
+    await tablesDB.deleteRow({
+      databaseId: appwriteDatabaseId,
+      tableId: cometUserProfilesTableId,
+      rowId,
     })
   }
 
@@ -273,6 +334,19 @@ async function main() {
     })
   }
 
+  async function createAuthToken(uid) {
+    try {
+      const payload = await request({
+        path: `/users/${encodeURIComponent(uid)}/auth_tokens`,
+        method: 'POST',
+      })
+
+      return readString(unwrapDataRecord(payload)?.authToken)
+    } catch (error) {
+      return null
+    }
+  }
+
   async function deleteRemoteUser(uid) {
     if (!uid) {
       return false
@@ -327,8 +401,71 @@ async function main() {
     }
   }
 
-  const localProfiles = await listLocalProfiles()
+  const authoritativeProfiles = await listRows(userProfilesTableId)
+  const existingLocalProfiles = await listRows(cometUserProfilesTableId)
+  const existingLocalProfilesByUserId = new Map(
+    existingLocalProfiles.map((row) => [row.user_id, row]),
+  )
+  const authoritativeUserIds = new Set(authoritativeProfiles.map((row) => row.user_id))
+  const backfill = {
+    totalAuthoritativeProfiles: authoritativeProfiles.length,
+    totalLocalProfiles: deleteStale
+      ? authoritativeProfiles.length
+      : new Set([
+          ...authoritativeProfiles.map((row) => row.user_id),
+          ...existingLocalProfiles.map((row) => row.user_id),
+        ]).size,
+    createdLocalProfiles: 0,
+    updatedLocalProfiles: 0,
+    deletedLocalProfiles: 0,
+    createdLocalUserIds: [],
+    updatedLocalUserIds: [],
+    deletedLocalUserIds: [],
+  }
+
+  for (const row of authoritativeProfiles) {
+    const existing = existingLocalProfilesByUserId.get(row.user_id) ?? null
+    const profile = {
+      userId: row.user_id,
+      uid: existing?.cometchat_uid || createStableCometChatUid(row.user_id),
+      fullName: normalizeName(row.full_name),
+      role: row.role,
+      avatarUrl: normalizeOptionalUrl(existing?.avatar_url),
+      profileLink: normalizeOptionalUrl(existing?.profile_link),
+      authToken: readString(existing?.auth_token),
+    }
+
+    if (isEquivalentLocalProfile(profile, existing)) {
+      continue
+    }
+
+    if (!existing) {
+      await createLocalProfile(profile)
+      backfill.createdLocalProfiles += 1
+      backfill.createdLocalUserIds.push(row.user_id)
+      continue
+    }
+
+    await updateLocalProfile(existing.$id, profile)
+    backfill.updatedLocalProfiles += 1
+    backfill.updatedLocalUserIds.push(row.user_id)
+  }
+
+  if (deleteStale) {
+    for (const row of existingLocalProfiles) {
+      if (authoritativeUserIds.has(row.user_id)) {
+        continue
+      }
+
+      await deleteLocalProfile(row.$id)
+      backfill.deletedLocalProfiles += 1
+      backfill.deletedLocalUserIds.push(row.user_id)
+    }
+  }
+
+  const localProfiles = await listRows(cometUserProfilesTableId)
   const result = {
+    ...backfill,
     totalLocalProfiles: localProfiles.length,
     totalManagedRemoteUsers: 0,
     created: 0,
@@ -357,6 +494,18 @@ async function main() {
 
     try {
       await updateRemoteUser(profile)
+
+      if (!profile.authToken) {
+        const authToken = await createAuthToken(profile.uid)
+
+        if (authToken) {
+          await updateLocalProfile(profile.rowId, {
+            ...profile,
+            authToken,
+          })
+        }
+      }
+
       result.updated += 1
       result.updatedUids.push(profile.uid)
     } catch (error) {
@@ -368,7 +517,10 @@ async function main() {
       const authToken = readString(unwrapDataRecord(createdPayload)?.authToken)
 
       if (authToken && authToken !== profile.authToken) {
-        await updateLocalProfileAuthToken(profile.rowId, authToken)
+        await updateLocalProfile(profile.rowId, {
+          ...profile,
+          authToken,
+        })
       }
 
       result.created += 1
@@ -400,6 +552,7 @@ async function main() {
     JSON.stringify(
       {
         ...result,
+        sourceTableId: userProfilesTableId,
         tableId: cometUserProfilesTableId,
         appId: cometChatAppId,
         region: cometChatRegion,

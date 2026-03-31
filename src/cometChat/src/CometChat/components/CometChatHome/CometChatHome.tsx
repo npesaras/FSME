@@ -24,6 +24,7 @@ import { CometChatTransferOwnership } from '../CometChatTransferOwnership/CometC
 import { CometChatMessages } from '../CometChatMessages/CometChatMessages';
 import { CometChatTabs } from '../CometChatSelector/CometChatTabs';
 import { CometChatSelector } from '../CometChatSelector/CometChatSelector';
+import { CometChatUsersEmptyView } from '../CometChatSelector/CometChatUsersEmptyView';
 import { CometChatUserDetails } from '../CometChatDetails/CometChatUserDetails';
 import { CometChatThreadedMessages } from '../CometChatDetails/CometChatThreadedMessages';
 import { CometChatCallDetails } from '../CometChatCallLog/CometChatCallLogDetails';
@@ -800,6 +801,7 @@ function CometChatHome({
             setAppState({ type: 'updateSelectedItemUser', payload: user });
             setAppState({ type: 'updateSelectedItemGroup', payload: undefined });
           }}
+          emptyView={<CometChatUsersEmptyView loggedInUser={loggedInUser} />}
           hideUserStatus={
             (chatFeatures && !chatFeatures?.coreMessagingExperience?.userAndFriendsPresence) ??
             !CometChatSettings.chatFeatures.coreMessagingExperience.userAndFriendsPresence

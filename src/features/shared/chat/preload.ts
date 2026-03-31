@@ -2,12 +2,39 @@ import type { ChatActor } from './config'
 
 const chatPreloadPromises = new Map<ChatActor, Promise<void>>()
 
+function formatPreloadError(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'string' && error.trim()) {
+    return error.trim()
+  }
+
+  if (error && typeof error === 'object') {
+    const candidate = error as Record<string, unknown>
+    const detail = [
+      typeof candidate.message === 'string' ? candidate.message : null,
+      typeof candidate.code === 'string' ? `code: ${candidate.code}` : null,
+      typeof candidate.statusCode === 'number' ? `status: ${candidate.statusCode}` : null,
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
+    if (detail) {
+      return detail
+    }
+  }
+
+  return 'Unknown chat preload error.'
+}
+
 async function warmChatWorkspace(actor: ChatActor) {
   await import('./components/CometChatWorkspacePanel')
 
   const [
     { getCometChatRoleConfig },
-    { getCurrentCometChatProfileServerFn },
+    { getCurrentCometChatProfileOrNullServerFn },
     { ensureCometChatRoleSession },
   ] = await Promise.all([
     import('./config'),
@@ -21,7 +48,11 @@ async function warmChatWorkspace(actor: ChatActor) {
     return
   }
 
-  const profile = await getCurrentCometChatProfileServerFn()
+  const profile = await getCurrentCometChatProfileOrNullServerFn()
+
+  if (!profile) {
+    return
+  }
 
   await ensureCometChatRoleSession({
     ...config,
@@ -46,6 +77,7 @@ export function preloadChatWorkspace(actor: ChatActor) {
       console.warn('Chat workspace preload failed', {
         actor,
         error,
+        formattedError: formatPreloadError(error),
       })
     })
     .then(() => undefined)

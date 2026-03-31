@@ -9,6 +9,7 @@ const cometChat = createCometChatProvisioningService({
   apiKey: config.cometchat.apiKey,
   tablesDB: appwrite.tablesDB,
   databaseId: config.appwrite.databaseId,
+  userProfilesTableId: config.appwrite.userProfilesTableId,
   cometUserProfilesTableId: config.appwrite.cometUserProfilesTableId,
   logger: console,
 })
